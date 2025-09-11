@@ -1,0 +1,49 @@
+# Docker commands
+
+
+## ---
+
+
+# DOCKER_COMPOSE = docker compose -f docker-compose.yml
+DOCKER_COMPOSE = docker compose -f docker-compose.yml
+
+## up: Start containers
+.PHONY: $(COMMAND_DOCKER_UP)
+$(COMMAND_DOCKER_UP):
+	COMPOSE_BAKE=true $(DOCKER_COMPOSE) up --build -d
+	$(MAKE) $(COMMAND_DOCKER_PROCESSES)
+
+
+## down: Stop and remove containers
+.PHONY: $(COMMAND_DOCKER_DOWN)
+$(COMMAND_DOCKER_DOWN):
+	$(DOCKER_COMPOSE) down
+
+
+## rs: Restart containers
+.PHONY: $(COMMAND_DOCKER_RESTART)
+$(COMMAND_DOCKER_RESTART): $(COMMAND_DOCKER_DOWN) $(COMMAND_DOCKER_UP)
+
+
+## ps: Show containers status
+.PHONY: $(COMMAND_DOCKER_PROCESSES)
+$(COMMAND_DOCKER_PROCESSES):
+	$(DOCKER_COMPOSE) ps
+
+
+## stop: Stop containers
+.PHONY: stop
+stop:
+	$(DOCKER_COMPOSE) stop
+
+
+## start: Start containers
+.PHONY: start
+start:
+	$(DOCKER_COMPOSE) start
+
+
+## remove: Remove all docker data
+.PHONY: remove
+remove:
+	$(DOCKER_COMPOSE) down --rmi all -v

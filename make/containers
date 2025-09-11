@@ -1,0 +1,13 @@
+# Docker containers
+
+
+## ---
+
+DOCKER_MYSQL = $(DOCKER_COMPOSE) exec db
+
+
+## mysql: Enter into mysql container
+.PHONY: mysql
+mysql:
+	$(DOCKER_MYSQL) sh -l
+

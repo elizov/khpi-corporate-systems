@@ -1,0 +1,24 @@
+services:
+
+  # MySQL
+  db:
+    container_name: ${APP_NAME}_db
+    build:
+      context: docker/services/mysql
+    image: ${APP_NAME}/mysql
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+    command:
+        - --character-set-server=utf8mb4
+        - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/common/.profile:/root/.profile:ro
+
+volumes:
+  db-data:
+    name: ${APP_NAME}-db-data
+    external: false

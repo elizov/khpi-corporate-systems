@@ -1,0 +1,7 @@
+# Custom commands
+
+
+## git: Open git repository
+.PHONY: git
+git:
+	cd ./server && open https://github.com/$$(git remote get-url origin | sed -E 's/git@github.com:(.*).git/\1/')
