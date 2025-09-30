@@ -51,4 +51,20 @@ public class AuthController {
     public String showLoginForm() {
         return "login";
     }
+
+    @PostMapping("/login")
+    public String processLogin(
+            @RequestParam String username,
+            @RequestParam String password,
+            Model model
+    ) {
+        var user = userRepository.findByUsername(username);
+
+        if (user == null || !user.getPassword().equals(password)) {
+            model.addAttribute("error", "Invalid username or password");
+            return "login";
+        }
+
+        return "redirect:/";
+    }
 }
