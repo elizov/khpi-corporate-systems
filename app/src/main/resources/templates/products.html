@@ -1,48 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Product List</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container mt-5">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Products', ~{::content})}">
 
-    <h2 class="text-center text-success">Product List</h2>
-
-    <table class="table table-striped mt-4">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Category</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>Ноутбук Lenovo</td>
-                <td>25 000 грн</td>
-                <td>Електроніка</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>Навушники Sony</td>
-                <td>3 500 грн</td>
-                <td>Аудіо</td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>Смартфон Samsung</td>
-                <td>18 000 грн</td>
-                <td>Електроніка</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="mt-3">
-        <a href="/" class="btn btn-secondary">Home</a>
+<div th:fragment="content">
+    <h2 class="mb-4 text-center text-success">Our Products</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Product">
+                <div class="card-body">
+                    <h5 class="card-title">Laptop Lenovo</h5>
+                    <p class="card-text">Electronics</p>
+                    <p class="fw-bold text-primary">25 000 UAH</p>
+                    <a href="#" class="btn btn-success">Buy</a>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-</body>
 </html>
