@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class AuthController {
@@ -56,6 +57,7 @@ public class AuthController {
     public String processLogin(
             @RequestParam String username,
             @RequestParam String password,
+            HttpSession session,
             Model model
     ) {
         var user = userRepository.findByUsername(username);
@@ -65,6 +67,14 @@ public class AuthController {
             return "login";
         }
 
+        session.setAttribute("user", user);
+
+        return "redirect:/";
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
         return "redirect:/";
     }
 }

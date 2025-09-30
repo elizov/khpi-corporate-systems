@@ -2,18 +2,26 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Home page</title>
+    <title>Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
 
-    <h1 class="text-center text-primary">Home page</h1>
-    <p class="text-center">This is the home page of our application.</p>
+    <h1 class="text-center text-primary">Welcome!</h1>
 
-    <div class="text-center mt-4">
-        <a href="/products" class="btn btn-default">Product List</a>
-        <a href="/login" class="btn btn-default">Login</a>
-        <a href="/register" class="btn btn-default">Register</a>
+    <div class="text-center mt-3">
+        <a href="/products" class="btn btn-success">Products</a>
+    </div>
+
+    <div th:if="${user != null}" class="text-center mt-4">
+        <p>You are logged in as <b th:text="${user.username}"></b></p>
+        <a href="/logout" class="btn btn-danger">Logout</a>
+    </div>
+
+    <div th:if="${user == null}" class="text-center mt-4">
+        <p>You are not logged in.</p>
+        <a href="/login" class="btn btn-primary">Login</a>
+        <a href="/register" class="btn btn-warning">Register</a>
     </div>
 
 </body>
