@@ -1,6 +1,12 @@
 # Custom commands
 
 
+## run: Run the app
+.PHONY: run
+run:
+	cd ./app && ./mvnw clean spring-boot:run
+
+
 ## git: Open git repository
 .PHONY: git
 git:
