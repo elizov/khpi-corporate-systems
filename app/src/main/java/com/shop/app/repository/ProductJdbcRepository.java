@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -27,15 +28,32 @@ public class ProductJdbcRepository {
         return product;
     };
 
-    public List<Product> findAll() {
-        return jdbcTemplate.query("SELECT * FROM products", productRowMapper);
-    }
+    public List<Product> findWithFilters(BigDecimal minPrice, BigDecimal maxPrice, String search, String sort) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM products WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
 
-    public List<Product> filterByPrice(BigDecimal minPrice, BigDecimal maxPrice) {
-        return jdbcTemplate.query(
-                "SELECT * FROM products WHERE price BETWEEN ? AND ?",
-                productRowMapper,
-                minPrice, maxPrice
-        );
+        if (minPrice != null) {
+            sql.append("AND price >= ? ");
+            params.add(minPrice);
+        }
+        if (maxPrice != null) {
+            sql.append("AND price <= ? ");
+            params.add(maxPrice);
+        }
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(name) LIKE ? OR LOWER(description) LIKE ?) ");
+            String like = "%" + search.toLowerCase() + "%";
+            params.add(like);
+            params.add(like);
+        }
+
+        if ("asc".equalsIgnoreCase(sort)) {
+            sql.append("ORDER BY price ASC");
+        } else if ("desc".equalsIgnoreCase(sort)) {
+            sql.append("ORDER BY price DESC");
+        }
+
+        return jdbcTemplate.query(sql.toString(), productRowMapper, params.toArray());
     }
 }

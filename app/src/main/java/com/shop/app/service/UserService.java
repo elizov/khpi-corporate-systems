@@ -14,19 +14,23 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    @Transactional(readOnly = true)
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
     @Transactional
     public void register(User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already exists");
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            throw new IllegalArgumentException("User with this username already exists");
         }
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            throw new IllegalArgumentException("User with this email already exists");
         }
         userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public User login(String username, String password) {
+        User user = userRepository.findByUsername(username);
+        if (user == null || !user.getPassword().equals(password)) {
+            return null;
+        }
+        return user;
     }
 }

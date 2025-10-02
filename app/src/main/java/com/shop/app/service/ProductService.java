@@ -18,18 +18,38 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<Product> getAllProducts() {
-        return productJdbcRepository.findAll();
-    }
+    public List<Product> getProducts(BigDecimal minPrice, BigDecimal maxPrice, String search, String sort) {
 
-    @Transactional(readOnly = true)
-    public List<Product> filterProducts(BigDecimal minPrice, BigDecimal maxPrice) {
-        if (minPrice == null || minPrice.compareTo(BigDecimal.ZERO) < 0) {
+        // Price validation
+        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
             minPrice = BigDecimal.ZERO;
         }
-        if (maxPrice == null || maxPrice.compareTo(minPrice) < 0) {
-            maxPrice = new BigDecimal("999999999.99");
+        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+            maxPrice = null; // ignore invalid
         }
-        return productJdbcRepository.filterByPrice(minPrice, maxPrice);
+        if (maxPrice != null && minPrice != null && maxPrice.compareTo(minPrice) < 0) {
+            // if max < min → swap
+            BigDecimal tmp = minPrice;
+            minPrice = maxPrice;
+            maxPrice = tmp;
+        }
+
+        // Search string validation
+        if (search != null) {
+            search = search.trim();
+            if (search.isEmpty()) {
+                search = null;
+            }
+        }
+
+        // Sort validation
+        if (sort != null) {
+            sort = sort.toLowerCase();
+            if (!sort.equals("asc") && !sort.equals("desc")) {
+                sort = null; // if not "asc"/"desc", then disable sorting
+            }
+        }
+
+        return productJdbcRepository.findWithFilters(minPrice, maxPrice, search, sort);
     }
 }

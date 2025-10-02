@@ -1,21 +1,21 @@
 package com.shop.app.controller;
 
 import com.shop.app.model.User;
-import com.shop.app.repository.UserRepository;
+import com.shop.app.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class AuthController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public AuthController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public AuthController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/register")
@@ -34,17 +34,17 @@ public class AuthController {
             return "register";
         }
 
-        if (userRepository.findByUsername(user.getUsername()) != null) {
-            model.addAttribute("usernameError", "User with this username already exists");
+        try {
+            userService.register(user);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("username")) {
+                model.addAttribute("usernameError", e.getMessage());
+            } else if (e.getMessage().contains("email")) {
+                model.addAttribute("emailError", e.getMessage());
+            }
             return "register";
         }
 
-        if (userRepository.findByEmail(user.getEmail()) != null) {
-            model.addAttribute("emailError", "User with this email already exists");
-            return "register";
-        }
-
-        userRepository.save(user);
         return "redirect:/login";
     }
 
@@ -60,15 +60,14 @@ public class AuthController {
             HttpSession session,
             Model model
     ) {
-        var user = userRepository.findByUsername(username);
+        var user = userService.login(username, password);
 
-        if (user == null || !user.getPassword().equals(password)) {
+        if (user == null) {
             model.addAttribute("error", "Invalid username or password");
             return "login";
         }
 
         session.setAttribute("user", user);
-
         return "redirect:/";
     }
 

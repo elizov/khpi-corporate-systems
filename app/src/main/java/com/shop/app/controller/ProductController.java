@@ -22,17 +22,19 @@ public class ProductController {
     public String products(
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
             Model model
     ) {
-        List<Product> products;
-        if (minPrice != null || maxPrice != null) {
-            products = productService.filterProducts(minPrice, maxPrice);
-        } else {
-            products = productService.getAllProducts();
-        }
+        List<Product> products = productService.getProducts(minPrice, maxPrice, search, sort);
 
         model.addAttribute("products", products);
         model.addAttribute("title", "Products");
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
+        model.addAttribute("search", search);
+        model.addAttribute("sort", sort);
+
         return "products";
     }
 }
