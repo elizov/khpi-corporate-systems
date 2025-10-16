@@ -6,8 +6,6 @@
     <div class="mt-5">
         <h1 class="text-primary mb-4">Your Cart</h1>
 
-        <div id="cart-alert" class="mb-3"></div>
-
         <div id="cart-empty-state" class="alert alert-info"
              th:classappend="${#lists.isEmpty(items)} ? '' : ' d-none'">
             Your cart is empty. Browse products to add items here.
@@ -59,7 +57,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const alertPlaceholder = document.getElementById('cart-alert');
             const cartCount = document.getElementById('cart-count');
             const cartTableBody = document.getElementById('cart-table-body');
             const cartTotalQuantity = document.getElementById('cart-total-quantity');
@@ -67,16 +64,14 @@
             const emptyState = document.getElementById('cart-empty-state');
             const tableWrapper = document.getElementById('cart-table-wrapper');
 
-            function renderAlert(type, message) {
-                if (!alertPlaceholder) {
-                    return;
+            function notify(type, message) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast(message, type);
+                } else if (type === 'danger') {
+                    console.error(message);
+                } else {
+                    console.log(message);
                 }
-                alertPlaceholder.innerHTML = `
-                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
             }
 
             function formatCurrency(value) {
@@ -126,12 +121,12 @@
 
             function handleCartResponse(result, row) {
                 if (!result) {
-                    renderAlert('danger', 'Unable to update cart');
+                    notify('danger', 'Unable to update cart');
                     return;
                 }
                 if (!result.ok) {
                     const message = result.data && result.data.message ? result.data.message : 'Unable to update cart';
-                    renderAlert('danger', message);
+                    notify('danger', message);
                     return;
                 }
 
@@ -152,7 +147,7 @@
                 }
 
                 updateSummary(data.totalQuantity, data.totalPrice);
-                renderAlert('success', data.message || 'Cart updated');
+                notify('success', data.message || 'Cart updated');
                 toggleEmptyState();
             }
 
@@ -172,7 +167,7 @@
                         handleCartResponse(result, row);
                     })
                     .catch(function () {
-                        renderAlert('danger', 'Unable to update cart');
+                        notify('danger', 'Unable to update cart');
                     });
             }
 
@@ -188,7 +183,7 @@
                         handleCartResponse(result, row);
                     })
                     .catch(function () {
-                        renderAlert('danger', 'Unable to update cart');
+                        notify('danger', 'Unable to update cart');
                     });
             }
 

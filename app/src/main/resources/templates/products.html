@@ -28,8 +28,6 @@
         </div>
     </form>
 
-    <div id="cart-alert" class="mb-3"></div>
-
     <div class="row">
         <div class="col-md-4" th:each="p : ${products}">
             <div class="card mb-4 shadow-sm">
@@ -50,19 +48,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const alertPlaceholder = document.getElementById('cart-alert');
             const cartCount = document.getElementById('cart-count');
 
-            function renderAlert(type, message) {
-                if (!alertPlaceholder) {
-                    return;
+            function notify(type, message) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast(message, type);
+                } else if (type === 'danger') {
+                    console.error(message);
+                } else {
+                    console.log(message);
                 }
-                alertPlaceholder.innerHTML = `
-                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
             }
 
             document.querySelectorAll('.btn-add-to-cart').forEach(function (button) {
@@ -82,16 +77,16 @@
                         })
                         .then(function (result) {
                             if (result.ok) {
-                                renderAlert('success', result.data.message || 'Product added to cart');
+                                notify('success', result.data.message || 'Product added to cart');
                                 if (cartCount && typeof result.data.totalQuantity === 'number') {
                                     cartCount.textContent = result.data.totalQuantity;
                                 }
                             } else {
-                                renderAlert('danger', result.data.message || 'Unable to add product to cart');
+                                notify('danger', result.data.message || 'Unable to add product to cart');
                             }
                         })
                         .catch(function () {
-                            renderAlert('danger', 'Unable to add product to cart');
+                            notify('danger', 'Unable to add product to cart');
                         });
                 });
             });
