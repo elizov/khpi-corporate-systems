@@ -1,7 +1,9 @@
 package com.shop.app.service;
 
 import com.shop.app.model.Product;
-import com.shop.app.repository.ProductJdbcRepository;
+import com.shop.app.repository.ProductRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,30 +14,27 @@ import java.util.Optional;
 @Service
 public class ProductService {
 
-    private final ProductJdbcRepository productJdbcRepository;
+    private final ProductRepository productRepository;
 
-    public ProductService(ProductJdbcRepository productJdbcRepository) {
-        this.productJdbcRepository = productJdbcRepository;
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
     @Transactional(readOnly = true)
     public List<Product> getProducts(BigDecimal minPrice, BigDecimal maxPrice, String search, String sort) {
 
-        // Price validation
         if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
             minPrice = BigDecimal.ZERO;
         }
         if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
-            maxPrice = null; // ignore invalid
+            maxPrice = null;
         }
         if (maxPrice != null && minPrice != null && maxPrice.compareTo(minPrice) < 0) {
-            // if max < min → swap
             BigDecimal tmp = minPrice;
             minPrice = maxPrice;
             maxPrice = tmp;
         }
 
-        // Search string validation
         if (search != null) {
             search = search.trim();
             if (search.isEmpty()) {
@@ -43,15 +42,23 @@ public class ProductService {
             }
         }
 
-        // Sort validation
         if (sort != null) {
             sort = sort.toLowerCase();
             if (!sort.equals("asc") && !sort.equals("desc")) {
-                sort = null; // if not "asc"/"desc", then disable sorting
+                sort = null;
             }
         }
 
-        return productJdbcRepository.findWithFilters(minPrice, maxPrice, search, sort);
+        Specification<Product> specification = buildSpecification(minPrice, maxPrice, search);
+        Sort sortSpec = resolveSort(sort);
+
+        if (sortSpec.isUnsorted()) {
+            return specification == null
+                    ? productRepository.findAll()
+                    : productRepository.findAll(specification);
+        }
+
+        return productRepository.findAll(specification, sortSpec);
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +66,43 @@ public class ProductService {
         if (id == null || id <= 0) {
             return Optional.empty();
         }
-        return productJdbcRepository.findById(id);
+        return productRepository.findById(id);
+    }
+
+    private Specification<Product> buildSpecification(BigDecimal minPrice, BigDecimal maxPrice, String search) {
+        Specification<Product> spec = null;
+
+        if (minPrice != null) {
+            BigDecimal min = minPrice;
+            Specification<Product> minSpec = (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), min);
+            spec = spec == null ? minSpec : spec.and(minSpec);
+        }
+
+        if (maxPrice != null) {
+            BigDecimal max = maxPrice;
+            Specification<Product> maxSpec = (root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), max);
+            spec = spec == null ? maxSpec : spec.and(maxSpec);
+        }
+
+        if (search != null) {
+            String like = "%" + search.toLowerCase() + "%";
+            Specification<Product> searchSpec = (root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("name")), like),
+                    cb.like(cb.lower(root.get("description")), like)
+            );
+            spec = spec == null ? searchSpec : spec.and(searchSpec);
+        }
+
+        return spec;
+    }
+
+    private Sort resolveSort(String sort) {
+        if ("asc".equals(sort)) {
+            return Sort.by(Sort.Direction.ASC, "price");
+        }
+        if ("desc".equals(sort)) {
+            return Sort.by(Sort.Direction.DESC, "price");
+        }
+        return Sort.unsorted();
     }
 }
