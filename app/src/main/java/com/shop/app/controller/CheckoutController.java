@@ -2,8 +2,9 @@ package com.shop.app.controller;
 
 import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
-import com.shop.app.model.ConfirmedOrder;
+import com.shop.app.model.Order;
 import com.shop.app.service.CartService;
+import com.shop.app.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -11,27 +12,28 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Controller
 public class CheckoutController {
 
     private static final String CHECKOUT_FORM_SESSION_KEY = "checkoutForm";
-    private static final String CONFIRMED_ORDER_SESSION_KEY = "confirmedOrder";
     private static final String PAYMENT_METHOD_CASH = "Cash on Delivery";
     private static final Pattern CARD_NUMBER_PATTERN = Pattern.compile("^[0-9]{12,19}$");
 
     private final CartService cartService;
+    private final OrderService orderService;
 
-    public CheckoutController(CartService cartService) {
+    public CheckoutController(CartService cartService, OrderService orderService) {
         this.cartService = cartService;
+        this.orderService = orderService;
     }
 
     @GetMapping("/checkout")
@@ -129,38 +131,28 @@ public class CheckoutController {
         int totalQuantity = cartService.getTotalQuantity(session);
         BigDecimal totalPrice = cartService.getTotalPrice(session);
 
-        ConfirmedOrder confirmedOrder = new ConfirmedOrder(
-                generateOrderNumber(),
-                checkoutForm,
-                items,
-                totalQuantity,
-                totalPrice,
-                LocalDateTime.now()
-        );
-
-        session.setAttribute(CONFIRMED_ORDER_SESSION_KEY, confirmedOrder);
+        Order order = orderService.createOrder(checkoutForm, items, totalQuantity, totalPrice);
         cartService.clearCart(session);
         session.removeAttribute(CHECKOUT_FORM_SESSION_KEY);
 
-        return "redirect:/order/confirmed";
+        return "redirect:/order/confirmed/" + order.getId();
     }
 
-    @GetMapping("/order/confirmed")
-    public String showConfirmedOrder(Model model, HttpSession session) {
-        ConfirmedOrder confirmedOrder = (ConfirmedOrder) session.getAttribute(CONFIRMED_ORDER_SESSION_KEY);
-        if (confirmedOrder == null) {
+    @GetMapping("/order/confirmed/{orderNumber}")
+    public String showConfirmedOrder(@PathVariable String orderNumber, Model model) {
+        Optional<Order> orderOptional = orderService.getOrderById(orderNumber);
+        if (orderOptional.isEmpty()) {
             return "redirect:/products";
         }
 
-        model.addAttribute("order", confirmedOrder);
-        boolean cardRequired = requiresCard(confirmedOrder.getCheckoutForm().getPaymentMethod());
+        Order order = orderOptional.get();
+        model.addAttribute("order", order);
+        boolean cardRequired = requiresCard(order.getPaymentMethod());
         model.addAttribute("cardRequired", cardRequired);
         model.addAttribute("cashPaymentMethod", PAYMENT_METHOD_CASH);
         if (cardRequired) {
-            model.addAttribute("maskedCardNumber", maskCardNumber(confirmedOrder.getCheckoutForm().getCardNumber()));
+            model.addAttribute("maskedCardNumber", maskCardNumber(order.getCardLastFour()));
         }
-
-        session.removeAttribute(CONFIRMED_ORDER_SESSION_KEY);
 
         return "order-confirmed";
     }
@@ -181,13 +173,12 @@ public class CheckoutController {
         if (cardNumber == null || cardNumber.isBlank()) {
             return "N/A";
         }
-        String lastFour = cardNumber.substring(cardNumber.length() - 4);
+        String value = cardNumber.replaceAll("\\s+", "");
+        if (value.length() < 4) {
+            return "****";
+        }
+        String lastFour = value.substring(value.length() - 4);
         return "**** **** **** " + lastFour;
-    }
-
-    private String generateOrderNumber() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        return "ORD-" + LocalDateTime.now().format(formatter);
     }
 
     private boolean requiresCard(String paymentMethod) {

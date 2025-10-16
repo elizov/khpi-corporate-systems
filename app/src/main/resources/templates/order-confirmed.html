@@ -8,7 +8,7 @@
         <p class="lead">Your order has been confirmed.</p>
         <p class="mb-4">
             Order number:
-            <span class="fw-bold" th:text="${order.orderNumber}">ORD-0000</span>
+            <span class="fw-bold" th:text="${order.id}">ORD-0000</span>
         </p>
     </div>
 
@@ -19,31 +19,31 @@
                     <h2 class="h5 mb-3">Delivery information</h2>
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Full name</dt>
-                        <dd class="col-sm-8" th:text="${order.checkoutForm.fullName}">John Doe</dd>
+                        <dd class="col-sm-8" th:text="${order.fullName}">John Doe</dd>
 
                         <dt class="col-sm-4">Email</dt>
-                        <dd class="col-sm-8" th:text="${order.checkoutForm.email}">john@example.com</dd>
+                        <dd class="col-sm-8" th:text="${order.email}">john@example.com</dd>
 
                         <dt class="col-sm-4">Phone</dt>
-                        <dd class="col-sm-8" th:text="${order.checkoutForm.phone}">+38 000 000</dd>
+                        <dd class="col-sm-8" th:text="${order.phone}">+38 000 000</dd>
 
                         <dt class="col-sm-4">Address</dt>
                         <dd class="col-sm-8">
-                            <div th:text="${order.checkoutForm.address}">Address</div>
-                            <div th:text="${order.checkoutForm.city + ', ' + order.checkoutForm.postalCode}">City, postal</div>
+                            <div th:text="${order.address}">Address</div>
+                            <div th:text="${order.city + ', ' + order.postalCode}">City, postal</div>
                         </dd>
 
                         <dt class="col-sm-4">Delivery</dt>
-                        <dd class="col-sm-8" th:text="${order.checkoutForm.deliveryMethod}">Method</dd>
+                        <dd class="col-sm-8" th:text="${order.deliveryMethod}">Method</dd>
 
                         <dt class="col-sm-4">Payment</dt>
-                        <dd class="col-sm-8" th:text="${order.checkoutForm.paymentMethod}">Method</dd>
+                        <dd class="col-sm-8" th:text="${order.paymentMethod}">Method</dd>
 
                         <dt class="col-sm-4" th:if="${cardRequired}">Card</dt>
                         <dd class="col-sm-8" th:if="${cardRequired}" th:text="${maskedCardNumber}">**** **** **** 1234</dd>
 
                         <dt class="col-sm-4">Notes</dt>
-                        <dd class="col-sm-8" th:text="${order.checkoutForm.notes != null ? order.checkoutForm.notes : '—'}">—</dd>
+                        <dd class="col-sm-8" th:text="${order.notes != null ? order.notes : '—'}">—</dd>
                     </dl>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                         <li class="list-group-item" th:each="item : ${order.items}">
                             <div class="d-flex justify-content-between">
                                 <span>
-                                    <span th:text="${item.name}">Product name</span>
+                                    <span th:text="${item.productName}">Product name</span>
                                     <span class="text-muted"> × </span>
                                     <span th:text="${item.quantity}">1</span>
                                 </span>
