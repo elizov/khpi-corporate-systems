@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Checkout', ~{::content})}">
+
+<div th:fragment="content">
+    <h1 class="mb-4 text-primary">Checkout</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Payment &amp; Delivery Information</h2>
+
+                    <form th:action="@{/checkout}" th:object="${checkoutForm}" method="post" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full name</label>
+                                <input type="text" class="form-control" th:field="*{fullName}">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('fullName')}"
+                                     th:errors="*{fullName}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" th:field="*{email}">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('email')}"
+                                     th:errors="*{email}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="text" class="form-control" th:field="*{phone}">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('phone')}"
+                                     th:errors="*{phone}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" th:field="*{city}">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('city')}"
+                                     th:errors="*{city}"></div>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-control" th:field="*{address}">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('address')}"
+                                     th:errors="*{address}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Postal code</label>
+                                <input type="text" class="form-control" th:field="*{postalCode}">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('postalCode')}"
+                                     th:errors="*{postalCode}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Delivery method</label>
+                                <select class="form-select" th:field="*{deliveryMethod}">
+                                    <option value="" disabled th:selected="${checkoutForm.deliveryMethod == null}">Select delivery method</option>
+                                    <option th:each="method : ${deliveryMethods}"
+                                            th:value="${method}"
+                                            th:text="${method}">
+                                    </option>
+                                </select>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('deliveryMethod')}"
+                                     th:errors="*{deliveryMethod}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Payment method</label>
+                                <select class="form-select"
+                                        th:field="*{paymentMethod}"
+                                        id="payment-method-select"
+                                        th:attr="data-cash-value=${cashPaymentMethod}">
+                                    <option value="" disabled th:selected="${checkoutForm.paymentMethod == null}">Select payment method</option>
+                                    <option th:each="method : ${paymentMethods}"
+                                            th:value="${method}"
+                                            th:text="${method}">
+                                    </option>
+                                </select>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('paymentMethod')}"
+                                     th:errors="*{paymentMethod}"></div>
+                            </div>
+                            <div class="col-md-6" id="card-number-group"
+                                 th:classappend="${checkoutForm.paymentMethod != null and checkoutForm.paymentMethod.equals(cashPaymentMethod)} ? ' d-none' : ''">
+                                <label class="form-label">Card number</label>
+                                <input type="text" class="form-control" th:field="*{cardNumber}" id="card-number-input">
+                                <div class="text-danger small" th:if="${#fields.hasErrors('cardNumber')}"
+                                     th:errors="*{cardNumber}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes (optional)</label>
+                                <textarea class="form-control" rows="3" th:field="*{notes}"></textarea>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('notes')}"
+                                     th:errors="*{notes}"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="/cart" class="btn btn-outline-secondary me-2">Back to cart</a>
+                            <button type="submit" class="btn btn-primary">Continue to confirmation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Order summary</h2>
+                    <div class="list-group mb-3">
+                        <div class="list-group-item d-flex justify-content-between fw-semibold">
+                            <span>Items</span>
+                            <span th:text="${totalQuantity} + ' pcs'">0 pcs</span>
+                        </div>
+                        <div class="list-group-item">
+                            <ul class="list-unstyled mb-0">
+                                <li th:each="item : ${items}">
+                                    <span th:text="${item.name}">Product</span>
+                                    <span class="text-muted"> × </span>
+                                    <span th:text="${item.quantity}">1</span>
+                                    <span class="text-muted"> — </span>
+                                    <span th:text="${item.subtotal} + ' UAH'">0 UAH</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between fw-semibold">
+                            <span>Total</span>
+                            <span th:text="${totalPrice} + ' UAH'">0 UAH</span>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        After submitting the form you will be able to review and confirm your order details.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentSelect = document.getElementById('payment-method-select');
+            const cardGroup = document.getElementById('card-number-group');
+            const cardInput = document.getElementById('card-number-input');
+            if (!paymentSelect || !cardGroup) {
+                return;
+            }
+
+            const cashValue = (paymentSelect.dataset.cashValue || 'Cash on Delivery').toLowerCase();
+
+            function toggleCardVisibility() {
+                const selected = (paymentSelect.value || '').trim().toLowerCase();
+                const isCash = selected === cashValue;
+                if (isCash) {
+                    cardGroup.classList.add('d-none');
+                    if (cardInput) {
+                        cardInput.value = '';
+                        cardInput.disabled = true;
+                    }
+                } else {
+                    cardGroup.classList.remove('d-none');
+                    if (cardInput) {
+                        cardInput.disabled = false;
+                    }
+                }
+            }
+
+            paymentSelect.addEventListener('change', toggleCardVisibility);
+            toggleCardVisibility();
+        });
+    </script>
+</div>
+
+</html>

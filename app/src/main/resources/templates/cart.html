@@ -52,6 +52,10 @@
                 <span class="fw-bold">Items: <span id="cart-total-quantity" th:text="${totalQuantity}">0</span></span>
                 <span class="fw-bold">Total: <span id="cart-total-price" th:text="${totalPrice} + ' UAH'">0 UAH</span></span>
             </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <a href="/checkout" class="btn btn-primary">Proceed to checkout</a>
+            </div>
         </div>
     </div>
 

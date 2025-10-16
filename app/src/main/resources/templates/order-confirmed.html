@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Order Confirmed', ~{::content})}">
+
+<div th:fragment="content">
+    <div class="text-center my-5">
+        <div class="display-5 text-success mb-3">Thank you!</div>
+        <p class="lead">Your order has been confirmed.</p>
+        <p class="mb-4">
+            Order number:
+            <span class="fw-bold" th:text="${order.orderNumber}">ORD-0000</span>
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Delivery information</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Full name</dt>
+                        <dd class="col-sm-8" th:text="${order.checkoutForm.fullName}">John Doe</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8" th:text="${order.checkoutForm.email}">john@example.com</dd>
+
+                        <dt class="col-sm-4">Phone</dt>
+                        <dd class="col-sm-8" th:text="${order.checkoutForm.phone}">+38 000 000</dd>
+
+                        <dt class="col-sm-4">Address</dt>
+                        <dd class="col-sm-8">
+                            <div th:text="${order.checkoutForm.address}">Address</div>
+                            <div th:text="${order.checkoutForm.city + ', ' + order.checkoutForm.postalCode}">City, postal</div>
+                        </dd>
+
+                        <dt class="col-sm-4">Delivery</dt>
+                        <dd class="col-sm-8" th:text="${order.checkoutForm.deliveryMethod}">Method</dd>
+
+                        <dt class="col-sm-4">Payment</dt>
+                        <dd class="col-sm-8" th:text="${order.checkoutForm.paymentMethod}">Method</dd>
+
+                        <dt class="col-sm-4" th:if="${cardRequired}">Card</dt>
+                        <dd class="col-sm-8" th:if="${cardRequired}" th:text="${maskedCardNumber}">**** **** **** 1234</dd>
+
+                        <dt class="col-sm-4">Notes</dt>
+                        <dd class="col-sm-8" th:text="${order.checkoutForm.notes != null ? order.checkoutForm.notes : '—'}">—</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Order summary</h2>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item" th:each="item : ${order.items}">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    <span th:text="${item.name}">Product name</span>
+                                    <span class="text-muted"> × </span>
+                                    <span th:text="${item.quantity}">1</span>
+                                </span>
+                                <span th:text="${item.subtotal} + ' UAH'">0 UAH</span>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between fw-semibold">
+                            <span>Total items</span>
+                            <span th:text="${order.totalQuantity} + ' pcs'">0 pcs</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between fw-semibold">
+                            <span>Paid</span>
+                            <span th:text="${order.totalPrice} + ' UAH'">0 UAH</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Created at</span>
+                            <span th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025 10:00</span>
+                        </li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="/products" class="btn btn-primary">Continue shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>

@@ -78,6 +78,12 @@ public class CartService {
         return false;
     }
 
+    public void clearCart(HttpSession session) {
+        Map<Long, CartItem> cart = getCart(session);
+        cart.clear();
+        updateSummaryAttributes(session, cart.values());
+    }
+
     public int getTotalQuantity(HttpSession session) {
         Map<Long, CartItem> cart = getCart(session);
         int totalQuantity = cart.values().stream()

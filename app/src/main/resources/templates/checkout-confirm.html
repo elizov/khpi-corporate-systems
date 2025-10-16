@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Confirm Order', ~{::content})}">
+
+<div th:fragment="content">
+    <h1 class="mb-4 text-primary">Confirm Your Order</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Delivery details</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Full name</dt>
+                        <dd class="col-sm-8" th:text="${checkoutForm.fullName}">John Doe</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8" th:text="${checkoutForm.email}">john@example.com</dd>
+
+                        <dt class="col-sm-4">Phone</dt>
+                        <dd class="col-sm-8" th:text="${checkoutForm.phone}">+38 000 000</dd>
+
+                        <dt class="col-sm-4">Address</dt>
+                        <dd class="col-sm-8">
+                            <div th:text="${checkoutForm.address}">123 Main Street</div>
+                            <div th:text="${checkoutForm.city + ', ' + checkoutForm.postalCode}">Kyiv, 02000</div>
+                        </dd>
+
+                        <dt class="col-sm-4">Delivery</dt>
+                        <dd class="col-sm-8" th:text="${checkoutForm.deliveryMethod}">Courier</dd>
+
+                        <dt class="col-sm-4">Payment</dt>
+                        <dd class="col-sm-8" th:text="${checkoutForm.paymentMethod}">Credit Card</dd>
+
+                        <dt class="col-sm-4" th:if="${cardRequired}">Card</dt>
+                        <dd class="col-sm-8" th:if="${cardRequired}" th:text="${maskedCardNumber}">**** **** **** 1234</dd>
+
+                        <dt class="col-sm-4">Notes</dt>
+                        <dd class="col-sm-8" th:text="${checkoutForm.notes != null ? checkoutForm.notes : '—'}">—</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div>
+                <a href="/checkout" class="btn btn-outline-secondary me-2">Back and edit</a>
+                <form th:action="@{/checkout/confirm}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success">Confirm order</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Order summary</h2>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item" th:each="item : ${items}">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    <span th:text="${item.name}">Product name</span>
+                                    <span class="text-muted"> × </span>
+                                    <span th:text="${item.quantity}">1</span>
+                                </span>
+                                <span th:text="${item.subtotal} + ' UAH'">0 UAH</span>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between fw-semibold">
+                            <span>Total items</span>
+                            <span th:text="${totalQuantity} + ' pcs'">0 pcs</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between fw-semibold">
+                            <span>Total amount</span>
+                            <span th:text="${totalPrice} + ' UAH'">0 UAH</span>
+                        </li>
+                    </ul>
+                    <p class="text-muted small mb-0">
+                        By confirming the order you agree to the selected payment and delivery options.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>
