@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class ProductJdbcRepository {
@@ -55,5 +56,14 @@ public class ProductJdbcRepository {
         }
 
         return jdbcTemplate.query(sql.toString(), productRowMapper, params.toArray());
+    }
+
+    public Optional<Product> findById(Long id) {
+        List<Product> products = jdbcTemplate.query(
+                "SELECT * FROM products WHERE id = ?",
+                productRowMapper,
+                id
+        );
+        return products.stream().findFirst();
     }
 }

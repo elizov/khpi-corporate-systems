@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductService {
@@ -51,5 +52,13 @@ public class ProductService {
         }
 
         return productJdbcRepository.findWithFilters(minPrice, maxPrice, search, sort);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Product> getProductById(Long id) {
+        if (id == null || id <= 0) {
+            return Optional.empty();
+        }
+        return productJdbcRepository.findById(id);
     }
 }

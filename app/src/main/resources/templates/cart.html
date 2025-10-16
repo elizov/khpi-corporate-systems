@@ -3,9 +3,40 @@
       th:replace="~{layout :: layout('Cart', ~{::content})}">
 
 <div th:fragment="content">
-    <div class="mt-5 text-center">
-        <h1 class="text-primary">Your Cart</h1>
-        <p class="lead">Cart functionality is coming soon. Stay tuned!</p>
+    <div class="mt-5">
+        <h1 class="text-primary mb-4">Your Cart</h1>
+
+        <div th:if="${#lists.isEmpty(items)}" class="alert alert-info">
+            Your cart is empty. Browse products to add items here.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(items)}">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${items}">
+                        <td th:text="${item.name}">Product Name</td>
+                        <td th:text="${item.price} + ' UAH'">0 UAH</td>
+                        <td th:text="${item.quantity}">1</td>
+                        <td th:text="${item.subtotal} + ' UAH'">0 UAH</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-end gap-4">
+                <span class="fw-bold">Items: <span th:text="${totalQuantity}">0</span></span>
+                <span class="fw-bold">Total: <span th:text="${totalPrice} + ' UAH'">0 UAH</span></span>
+            </div>
+        </div>
     </div>
 </div>
 

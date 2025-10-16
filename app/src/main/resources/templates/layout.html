@@ -14,7 +14,12 @@
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
                 <li><a class="nav-link" href="/products">Products</a></li>
-                <li><a class="nav-link" href="/cart">Cart</a></li>
+                <li>
+                    <a class="nav-link d-flex align-items-center" href="/cart">
+                        Cart
+                        <span id="cart-count" class="badge bg-secondary ms-2" th:text="${session.cartTotalQuantity} ?: 0">0</span>
+                    </a>
+                </li>
                 <li th:if="${session.user == null}" class="nav-item"><a class="nav-link" href="/login">Login</a></li>
                 <li th:if="${session.user == null}" class="nav-item"><a class="nav-link" href="/register">Register</a></li>
 
