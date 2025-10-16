@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('My Orders', ~{::content})}">
+
+<div th:fragment="content">
+    <div th:if="${#lists.isEmpty(orders)}" class="alert alert-info">
+        You do not have any orders yet.
+    </div>
+
+    <div th:if="${!#lists.isEmpty(orders)}" class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th scope="col">Order #</th>
+                <th scope="col">Date</th>
+                <th scope="col">Total</th>
+                <th scope="col">Items</th>
+                <th scope="col">Payment</th>
+                <th scope="col">Delivery</th>
+                <th scope="col" class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders}">
+                <td th:text="${order.id}">ORD-ID</td>
+                <td th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025 10:00</td>
+                <td th:text="${order.totalPrice} + ' UAH'">0 UAH</td>
+                <td th:text="${order.totalQuantity}">0</td>
+                <td th:text="${order.paymentMethod}">Payment</td>
+                <td th:text="${order.deliveryMethod}">Delivery</td>
+                <td class="text-end">
+                    <a th:href="@{'/order/' + ${order.id}}" class="btn btn-sm btn-outline-primary">View</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</html>

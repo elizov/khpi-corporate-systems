@@ -1,3 +1,15 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    age INT NOT NULL,
+    phone VARCHAR(50),
+    address VARCHAR(255),
+    city VARCHAR(100),
+    postal_code VARCHAR(50)
+);
+
 CREATE TABLE IF NOT EXISTS products (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -19,8 +31,10 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_method VARCHAR(60) NOT NULL,
     card_last_four VARCHAR(4),
     notes VARCHAR(300),
+    user_id BIGINT,
     total_quantity INT NOT NULL,
-    total_price DECIMAL(12, 2) NOT NULL
+    total_price DECIMAL(12, 2) NOT NULL,
+    CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS order_items (

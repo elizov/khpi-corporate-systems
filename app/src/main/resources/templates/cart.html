@@ -4,8 +4,6 @@
 
 <div th:fragment="content">
     <div class="mt-5">
-        <h1 class="text-primary mb-4">Your Cart</h1>
-
         <div id="cart-empty-state" class="alert alert-info"
              th:classappend="${#lists.isEmpty(items)} ? '' : ' d-none'">
             Your cart is empty. Browse products to add items here.

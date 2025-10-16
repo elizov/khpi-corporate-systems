@@ -4,6 +4,7 @@ import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
 import com.shop.app.model.OrderItem;
+import com.shop.app.model.User;
 import com.shop.app.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,8 @@ public class OrderService {
     public Order createOrder(CheckoutForm checkoutForm,
                              List<CartItem> items,
                              int totalQuantity,
-                             BigDecimal totalPrice) {
+                             BigDecimal totalPrice,
+                             User user) {
         Order order = new Order();
         order.setId(UUID.randomUUID().toString());
         order.setCreatedAt(LocalDateTime.now());
@@ -43,6 +45,7 @@ public class OrderService {
         order.setNotes(checkoutForm.getNotes());
         order.setTotalQuantity(totalQuantity);
         order.setTotalPrice(totalPrice == null ? BigDecimal.ZERO : totalPrice.setScale(2, RoundingMode.HALF_UP));
+        order.setUser(user);
 
         String cardNumber = checkoutForm.getCardNumber();
         if (cardNumber != null && cardNumber.length() >= 4) {
@@ -78,5 +81,13 @@ public class OrderService {
             return Optional.empty();
         }
         return orderRepository.findWithItemsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Order> getOrdersByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
 }

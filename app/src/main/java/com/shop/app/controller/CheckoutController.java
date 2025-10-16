@@ -3,6 +3,7 @@ package com.shop.app.controller;
 import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
+import com.shop.app.model.User;
 import com.shop.app.service.CartService;
 import com.shop.app.service.OrderService;
 import jakarta.servlet.http.HttpSession;
@@ -12,14 +13,14 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 @Controller
 public class CheckoutController {
@@ -43,9 +44,18 @@ public class CheckoutController {
             return "redirect:/cart";
         }
 
+        User currentUser = (User) session.getAttribute("user");
         CheckoutForm checkoutForm = (CheckoutForm) session.getAttribute(CHECKOUT_FORM_SESSION_KEY);
         if (checkoutForm == null) {
             checkoutForm = new CheckoutForm();
+        }
+        if (currentUser != null) {
+            maybeSet(checkoutForm::getFullName, checkoutForm::setFullName, currentUser.getUsername());
+            maybeSet(checkoutForm::getEmail, checkoutForm::setEmail, currentUser.getEmail());
+            maybeSet(checkoutForm::getPhone, checkoutForm::setPhone, currentUser.getPhone());
+            maybeSet(checkoutForm::getAddress, checkoutForm::setAddress, currentUser.getAddress());
+            maybeSet(checkoutForm::getCity, checkoutForm::setCity, currentUser.getCity());
+            maybeSet(checkoutForm::getPostalCode, checkoutForm::setPostalCode, currentUser.getPostalCode());
         }
 
         populateCartData(model, session, items);
@@ -131,30 +141,12 @@ public class CheckoutController {
         int totalQuantity = cartService.getTotalQuantity(session);
         BigDecimal totalPrice = cartService.getTotalPrice(session);
 
-        Order order = orderService.createOrder(checkoutForm, items, totalQuantity, totalPrice);
+        User currentUser = (User) session.getAttribute("user");
+        Order order = orderService.createOrder(checkoutForm, items, totalQuantity, totalPrice, currentUser);
         cartService.clearCart(session);
         session.removeAttribute(CHECKOUT_FORM_SESSION_KEY);
 
-        return "redirect:/order/confirmed/" + order.getId();
-    }
-
-    @GetMapping("/order/confirmed/{orderNumber}")
-    public String showConfirmedOrder(@PathVariable String orderNumber, Model model) {
-        Optional<Order> orderOptional = orderService.getOrderById(orderNumber);
-        if (orderOptional.isEmpty()) {
-            return "redirect:/products";
-        }
-
-        Order order = orderOptional.get();
-        model.addAttribute("order", order);
-        boolean cardRequired = requiresCard(order.getPaymentMethod());
-        model.addAttribute("cardRequired", cardRequired);
-        model.addAttribute("cashPaymentMethod", PAYMENT_METHOD_CASH);
-        if (cardRequired) {
-            model.addAttribute("maskedCardNumber", maskCardNumber(order.getCardLastFour()));
-        }
-
-        return "order-confirmed";
+        return "redirect:/order/" + order.getId();
     }
 
     private void populateCartData(Model model, HttpSession session, List<CartItem> items) {
@@ -199,5 +191,11 @@ public class CheckoutController {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void maybeSet(Supplier<String> getter, Consumer<String> setter, String value) {
+        if (getter.get() == null && value != null && !value.isBlank()) {
+            setter.accept(value);
+        }
     }
 }

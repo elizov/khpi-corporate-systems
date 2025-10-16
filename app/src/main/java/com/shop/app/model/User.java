@@ -30,6 +30,18 @@ public class User {
     @Column(nullable = false)
     private Integer age;
 
+    @Column
+    private String phone;
+
+    @Column
+    private String address;
+
+    @Column
+    private String city;
+
+    @Column(name = "postal_code")
+    private String postalCode;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -44,4 +56,16 @@ public class User {
 
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getPostalCode() { return postalCode; }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
 }
