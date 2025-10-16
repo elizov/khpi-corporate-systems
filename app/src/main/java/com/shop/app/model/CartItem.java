@@ -36,6 +36,10 @@ public class CartItem {
         this.quantity++;
     }
 
+    public void setQuantity(int quantity) {
+        this.quantity = Math.max(quantity, 0);
+    }
+
     public BigDecimal getSubtotal() {
         return price.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP);
     }

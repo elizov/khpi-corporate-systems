@@ -46,6 +46,38 @@ public class CartService {
         return new ArrayList<>(getCart(session).values());
     }
 
+    public boolean containsProduct(Long productId, HttpSession session) {
+        return getCart(session).containsKey(productId);
+    }
+
+    public CartItem updateQuantity(Long productId, int quantity, HttpSession session) {
+        Map<Long, CartItem> cart = getCart(session);
+        CartItem cartItem = cart.get(productId);
+        if (cartItem == null) {
+            return null;
+        }
+
+        if (quantity <= 0) {
+            cart.remove(productId);
+            updateSummaryAttributes(session, cart.values());
+            return null;
+        }
+
+        cartItem.setQuantity(quantity);
+        updateSummaryAttributes(session, cart.values());
+        return cartItem;
+    }
+
+    public boolean removeProduct(Long productId, HttpSession session) {
+        Map<Long, CartItem> cart = getCart(session);
+        CartItem removed = cart.remove(productId);
+        if (removed != null) {
+            updateSummaryAttributes(session, cart.values());
+            return true;
+        }
+        return false;
+    }
+
     public int getTotalQuantity(HttpSession session) {
         Map<Long, CartItem> cart = getCart(session);
         int totalQuantity = cart.values().stream()
