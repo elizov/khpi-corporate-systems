@@ -11,3 +11,16 @@ run:
 .PHONY: git
 git:
 	cd ./server && open https://github.com/$$(git remote get-url origin | sed -E 's/git@github.com:(.*).git/\1/')
+
+
+## web: Open the web
+.PHONY: web
+web:
+	open http://localhost:3000
+
+
+## swagger: Open the swagger docs
+.PHONY: swagger
+swagger:
+	open http://localhost:3000/swagger-ui/index.html
+

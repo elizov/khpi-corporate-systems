@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Service
 public class ProductService {
@@ -67,6 +68,39 @@ public class ProductService {
             return Optional.empty();
         }
         return productRepository.findById(id);
+    }
+
+    @Transactional
+    public Product createProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    @Transactional
+    public Optional<Product> updateProduct(Long id, Product source) {
+        return productRepository.findById(id).map(existing -> {
+            existing.setName(source.getName());
+            existing.setCategory(source.getCategory());
+            existing.setPrice(source.getPrice());
+            existing.setDescription(source.getDescription());
+            return productRepository.save(existing);
+        });
+    }
+
+    @Transactional
+    public Optional<Product> applyPartialUpdate(Long id, Consumer<Product> updater) {
+        return productRepository.findById(id).map(existing -> {
+            updater.accept(existing);
+            return productRepository.save(existing);
+        });
+    }
+
+    @Transactional
+    public boolean deleteProduct(Long id) {
+        if (id == null || id <= 0 || !productRepository.existsById(id)) {
+            return false;
+        }
+        productRepository.deleteById(id);
+        return true;
     }
 
     private Specification<Product> buildSpecification(BigDecimal minPrice, BigDecimal maxPrice, String search) {
