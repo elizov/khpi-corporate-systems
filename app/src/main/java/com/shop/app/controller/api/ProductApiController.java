@@ -38,7 +38,7 @@ public class ProductApiController {
     @GetMapping
     @Operation(
             summary = "Get all products",
-            description = "Returns all products with optional filters for price range and keyword search.",
+            description = "Returns all products with optional filters for price range, keyword search, and sorting.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "List of products returned")
             }
@@ -47,9 +47,10 @@ public class ProductApiController {
             @Parameter(description = "Lower price bound (inclusive)") @RequestParam(required = false) BigDecimal minPrice,
             @Parameter(description = "Upper price bound (inclusive)") @RequestParam(required = false) BigDecimal maxPrice,
             @Parameter(description = "Search query applied to name or description") @RequestParam(required = false) String search,
-            @Parameter(description = "Price sorting direction: asc or desc") @RequestParam(required = false) String sort
+            @Parameter(description = "Field to sort by. Allowed values: id, name, price, category") @RequestParam(required = false) String sortField,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(required = false) String sortDirection
     ) {
-        List<Product> products = productService.getProducts(minPrice, maxPrice, search, sort);
+        List<Product> products = productService.getProducts(minPrice, maxPrice, search, sortField, sortDirection);
         return ResponseEntity.ok(products.stream().map(ProductResponse::fromEntity).toList());
     }
 

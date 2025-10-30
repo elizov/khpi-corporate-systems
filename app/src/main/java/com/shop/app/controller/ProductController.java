@@ -26,7 +26,7 @@ public class ProductController {
             @RequestParam(required = false) String sort,
             Model model
     ) {
-        List<Product> products = productService.getProducts(minPrice, maxPrice, search, sort);
+        List<Product> products = productService.getProducts(minPrice, maxPrice, search, "price", sort);
 
         model.addAttribute("products", products);
         model.addAttribute("title", "Products");

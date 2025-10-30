@@ -1,7 +1,9 @@
-DELETE FROM order_items;
-DELETE FROM orders;
-DELETE FROM users;
-DELETE FROM products;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE order_items;
+TRUNCATE TABLE orders;
+TRUNCATE TABLE users;
+TRUNCATE TABLE products;
+SET FOREIGN_KEY_CHECKS = 1;
 
 INSERT INTO users (username, email, password, age) VALUES
 ('user', 'user@example.com', 'pass', 30),

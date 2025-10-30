@@ -9,7 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Service
@@ -22,7 +24,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<Product> getProducts(BigDecimal minPrice, BigDecimal maxPrice, String search, String sort) {
+    public List<Product> getProducts(BigDecimal minPrice,
+                                     BigDecimal maxPrice,
+                                     String search,
+                                     String sortField,
+                                     String sortDirection) {
 
         if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
             minPrice = BigDecimal.ZERO;
@@ -43,15 +49,8 @@ public class ProductService {
             }
         }
 
-        if (sort != null) {
-            sort = sort.toLowerCase();
-            if (!sort.equals("asc") && !sort.equals("desc")) {
-                sort = null;
-            }
-        }
-
         Specification<Product> specification = buildSpecification(minPrice, maxPrice, search);
-        Sort sortSpec = resolveSort(sort);
+        Sort sortSpec = resolveSort(sortField, sortDirection);
 
         if (sortSpec.isUnsorted()) {
             return specification == null
@@ -59,6 +58,9 @@ public class ProductService {
                     : productRepository.findAll(specification);
         }
 
+        if (specification == null) {
+            return productRepository.findAll(sortSpec);
+        }
         return productRepository.findAll(specification, sortSpec);
     }
 
@@ -130,13 +132,51 @@ public class ProductService {
         return spec;
     }
 
-    private Sort resolveSort(String sort) {
-        if ("asc".equals(sort)) {
-            return Sort.by(Sort.Direction.ASC, "price");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "name", "price", "category");
+
+    private Sort resolveSort(String sortField, String sortDirection) {
+        String normalizedField = normalizeSortField(sortField);
+        if (normalizedField == null) {
+            return Sort.unsorted();
         }
-        if ("desc".equals(sort)) {
-            return Sort.by(Sort.Direction.DESC, "price");
+
+        Sort.Direction direction = normalizeSortDirection(sortDirection);
+        if (direction == null) {
+            direction = Sort.Direction.ASC;
         }
-        return Sort.unsorted();
+        return Sort.by(direction, normalizedField);
+    }
+
+    private String normalizeSortField(String sortField) {
+        if (sortField == null) {
+            return null;
+        }
+        String normalized = sortField.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        normalized = normalized.toLowerCase(Locale.ROOT);
+        if (!ALLOWED_SORT_FIELDS.contains(normalized)) {
+            return null;
+        }
+        return normalized;
+    }
+
+    private Sort.Direction normalizeSortDirection(String sortDirection) {
+        if (sortDirection == null) {
+            return null;
+        }
+        String normalized = sortDirection.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        normalized = normalized.toLowerCase(Locale.ROOT);
+        if ("asc".equals(normalized)) {
+            return Sort.Direction.ASC;
+        }
+        if ("desc".equals(normalized)) {
+            return Sort.Direction.DESC;
+        }
+        return null;
     }
 }
