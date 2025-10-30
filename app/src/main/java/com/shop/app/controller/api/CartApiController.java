@@ -1,4 +1,4 @@
-package com.shop.app.controller;
+package com.shop.app.controller.api;
 
 import com.shop.app.model.CartItem;
 import com.shop.app.model.Product;
@@ -15,12 +15,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cart")
-public class CartRestController {
+public class CartApiController {
 
     private final ProductService productService;
     private final CartService cartService;
 
-    public CartRestController(ProductService productService, CartService cartService) {
+    public CartApiController(ProductService productService, CartService cartService) {
         this.productService = productService;
         this.cartService = cartService;
     }
