@@ -6,12 +6,12 @@ TRUNCATE TABLE products;
 SET FOREIGN_KEY_CHECKS = 1;
 
 INSERT INTO users (username, email, password, role, age) VALUES
-('user', 'user@example.com', 'pass', 'USER', 30),
-('admin', 'admin@example.com', 'pass', 'ADMIN', 30),
-('john', 'john.doe@example.com', 'pass', 'USER', 25),
-('anna', 'anna.smith@example.com', 'pass', 'USER', 28),
-('mike', 'mike.ross@example.com', 'pass', 'USER', 32),
-('sara', 'sara.connor@example.com', 'pass', 'USER', 35);
+('user', 'user@example.com', 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1', 'USER', 30),
+('admin', 'admin@example.com', 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1', 'ADMIN', 30),
+('john', 'john.doe@example.com', 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1', 'USER', 25),
+('anna', 'anna.smith@example.com', 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1', 'USER', 28),
+('mike', 'mike.ross@example.com', 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1', 'USER', 32),
+('sara', 'sara.connor@example.com', 'd74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1', 'USER', 35);
 
 
 -- Electronics
