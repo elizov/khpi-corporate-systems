@@ -1,5 +1,7 @@
 @baseUrl = http://localhost:3000
+
 @username = admin
+# @username = user
 @password = pass
 
 ### 0. Obtain admin token
