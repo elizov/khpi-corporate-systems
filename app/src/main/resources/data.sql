@@ -5,13 +5,13 @@ TRUNCATE TABLE users;
 TRUNCATE TABLE products;
 SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT INTO users (username, email, password, age) VALUES
-('user', 'user@example.com', 'pass', 30),
-('admin', 'admin@example.com', 'pass', 30),
-('john', 'john.doe@example.com', 'pass', 25),
-('anna', 'anna.smith@example.com', 'pass', 28),
-('mike', 'mike.ross@example.com', 'pass', 32),
-('sara', 'sara.connor@example.com', 'pass', 35);
+INSERT INTO users (username, email, password, role, age) VALUES
+('user', 'user@example.com', 'pass', 'USER', 30),
+('admin', 'admin@example.com', 'pass', 'ADMIN', 30),
+('john', 'john.doe@example.com', 'pass', 'USER', 25),
+('anna', 'anna.smith@example.com', 'pass', 'USER', 28),
+('mike', 'mike.ross@example.com', 'pass', 'USER', 32),
+('sara', 'sara.connor@example.com', 'pass', 'USER', 35);
 
 
 -- Electronics

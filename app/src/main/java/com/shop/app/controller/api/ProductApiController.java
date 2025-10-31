@@ -13,6 +13,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -77,6 +78,7 @@ public class ProductApiController {
                     @ApiResponse(responseCode = "400", description = "Validation failed")
             }
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         Product created = productService.createProduct(request.toProduct());
         return ResponseEntity
@@ -94,6 +96,7 @@ public class ProductApiController {
                     @ApiResponse(responseCode = "404", description = "Product not found")
             }
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> replaceProduct(@PathVariable Long id,
                                                           @Valid @RequestBody ProductRequest request) {
         Product source = request.toProduct();
@@ -113,6 +116,7 @@ public class ProductApiController {
                     @ApiResponse(responseCode = "404", description = "Product not found")
             }
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> patchProduct(@PathVariable Long id,
                                                         @Valid @RequestBody ProductPatchRequest request) {
         if (!request.hasUpdates()) {
@@ -146,6 +150,7 @@ public class ProductApiController {
                     @ApiResponse(responseCode = "404", description = "Product not found")
             }
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         boolean deleted = productService.deleteProduct(id);
         if (!deleted) {

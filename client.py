@@ -7,12 +7,19 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import Any, Dict, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, Optional, Tuple
 
 import requests
 
 DEFAULT_BASE_URL = "http://localhost:3000"
 DEFAULT_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
+
+
+@dataclass
+class ClientContext:
+    base_url: str
+    auth: Optional[Tuple[str, str]] = None
 
 
 def prompt(title: str, default: Optional[str] = None) -> str:
@@ -36,7 +43,10 @@ def prompt(title: str, default: Optional[str] = None) -> str:
     return value
 
 
-def request_json(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, Any]]:
+def request_json(context: ClientContext, method: str, path: str, **kwargs: Any) -> Optional[Dict[str, Any]]:
+    url = f"{context.base_url}{path}"
+    if context.auth and "auth" not in kwargs:
+        kwargs["auth"] = context.auth
     try:
         response = requests.request(method, url, timeout=10, **kwargs)
     except requests.RequestException as exc:
@@ -67,11 +77,11 @@ def format_product(product: Dict[str, Any]) -> str:
     )
 
 
-def list_products(base_url: str) -> None:
+def list_products(context: ClientContext) -> None:
     sort_field = prompt("Sort field [id|name|price|category]", "id")
     sort_direction = prompt("Sort direction [asc|desc]", "asc")
     params = {"sortField": sort_field, "sortDirection": sort_direction}
-    data = request_json("GET", f"{base_url}/api/products", params=params)
+    data = request_json(context, "GET", "/api/products", params=params)
     if data is None:
         return
     if not data:
@@ -83,7 +93,7 @@ def list_products(base_url: str) -> None:
         print(format_product(product))
 
 
-def create_product(base_url: str) -> Optional[int]:
+def create_product(context: ClientContext) -> Optional[int]:
     name = prompt("Name", "Demo Product")
     category = prompt("Category", "Testing")
     price = prompt("Price", "123.45")
@@ -96,7 +106,7 @@ def create_product(base_url: str) -> Optional[int]:
         "description": description,
     }
 
-    data = request_json("POST", f"{base_url}/api/products", headers=DEFAULT_HEADERS, data=json.dumps(payload))
+    data = request_json(context, "POST", "/api/products", headers=DEFAULT_HEADERS, data=json.dumps(payload))
     if data is None:
         return None
 
@@ -105,15 +115,15 @@ def create_product(base_url: str) -> Optional[int]:
     return data.get("id")
 
 
-def get_product(base_url: str) -> None:
+def get_product(context: ClientContext) -> None:
     product_id = prompt("Product ID", "1")
-    data = request_json("GET", f"{base_url}/api/products/{product_id}")
+    data = request_json(context, "GET", f"/api/products/{product_id}")
     if data is None:
         return
     print(format_product(data))
 
 
-def replace_product(base_url: str) -> None:
+def replace_product(context: ClientContext) -> None:
     product_id = prompt("Product ID", "1")
     name = prompt("New name", "Updated Product")
     category = prompt("New category", "Testing")
@@ -127,14 +137,14 @@ def replace_product(base_url: str) -> None:
         "description": description,
     }
 
-    data = request_json("PUT", f"{base_url}/api/products/{product_id}", headers=DEFAULT_HEADERS, data=json.dumps(payload))
+    data = request_json(context, "PUT", f"/api/products/{product_id}", headers=DEFAULT_HEADERS, data=json.dumps(payload))
     if data is None:
         return
     print("Product replaced successfully:")
     print(format_product(data))
 
 
-def patch_product(base_url: str) -> None:
+def patch_product(context: ClientContext) -> None:
     product_id = prompt("Product ID", "1")
     name = prompt("New name (leave blank to skip)", "")
     category = prompt("New category (leave blank to skip)", "")
@@ -155,24 +165,38 @@ def patch_product(base_url: str) -> None:
         print("No fields provided. Nothing to update.")
         return
 
-    data = request_json("PATCH", f"{base_url}/api/products/{product_id}", headers=DEFAULT_HEADERS, data=json.dumps(payload))
+    data = request_json(context, "PATCH", f"/api/products/{product_id}", headers=DEFAULT_HEADERS, data=json.dumps(payload))
     if data is None:
         return
     print("Product updated successfully:")
     print(format_product(data))
 
 
-def delete_product(base_url: str) -> None:
+def delete_product(context: ClientContext) -> None:
     product_id = prompt("Product ID", "1")
-    response = requests.delete(f"{base_url}/api/products/{product_id}", timeout=10)
+    kwargs: Dict[str, Any] = {"timeout": 10}
+    if context.auth:
+        kwargs["auth"] = context.auth
+    response = requests.delete(f"{context.base_url}/api/products/{product_id}", **kwargs)
     if response.status_code == 204:
         print("Product deleted successfully.")
     else:
         print(f"[ERROR] HTTP {response.status_code}: {response.text}")
 
 
-def main() -> None:
+def build_context() -> ClientContext:
     base_url = prompt("API base URL", DEFAULT_BASE_URL)
+    use_auth = prompt("Use authentication? [y/n]", "y").lower()
+    auth: Optional[Tuple[str, str]] = None
+    if use_auth.startswith("y"):
+        username = prompt("Username", "admin")
+        password = prompt("Password", "pass")
+        auth = (username, password)
+    return ClientContext(base_url=base_url, auth=auth)
+
+
+def main() -> None:
+    context = build_context()
     options = {
         "1": ("List products", list_products),
         "2": ("Create product", create_product),
@@ -200,7 +224,7 @@ def main() -> None:
 
         _, handler = action
         if handler:
-            handler(base_url)
+            handler(context)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ package com.shop.app.service;
 
 import com.shop.app.model.User;
 import com.shop.app.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -22,13 +25,18 @@ public class UserService {
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new IllegalArgumentException("User with this email already exists");
         }
+        if (user.getRole() == null || user.getRole().isBlank()) {
+            user.setRole("USER");
+        }
+        user.setRole(user.getRole().toUpperCase(java.util.Locale.ROOT));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
 
     @Transactional(readOnly = true)
     public User login(String username, String password) {
         User user = userRepository.findByUsername(username);
-        if (user == null || !user.getPassword().equals(password)) {
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             return null;
         }
         return user;

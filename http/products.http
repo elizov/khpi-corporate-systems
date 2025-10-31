@@ -1,14 +1,31 @@
 @baseUrl = http://localhost:3000
+@username = admin
+@password = pass
+
+### 0. Obtain admin token
+# @name auth
+POST {{baseUrl}}/api/auth/token
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### Admin Auth
+@adminToken = {{auth.response.body.token}}
 
 ### 1. Get all products
 GET {{baseUrl}}/api/products?sortField=id&sortDirection=desc
 Accept: application/json
 
 ### 2. Create product
-# @name newProduct
+# @name product
 POST {{baseUrl}}/api/products
 Content-Type: application/json
 Accept: application/json
+Authorization: {{adminToken}}
 
 {
   "name": "REST Client Demo Product",
@@ -18,16 +35,18 @@ Accept: application/json
 }
 
 ### Product ID
-@productId = {{newProduct.response.body.id}}
+@productId = {{product.response.body.id}}
 
 ### 3. Get the created product
 GET {{baseUrl}}/api/products/{{productId}}
 Accept: application/json
+Authorization: {{adminToken}}
 
 ### 4. Replace the created product
 PUT {{baseUrl}}/api/products/{{productId}}
 Content-Type: application/json
 Accept: application/json
+Authorization: {{adminToken}}
 
 {
   "name": "REST Client Demo Product (Updated)",
@@ -40,6 +59,7 @@ Accept: application/json
 PATCH {{baseUrl}}/api/products/{{productId}}
 Content-Type: application/json
 Accept: application/json
+Authorization: {{adminToken}}
 
 {
   "price": 149.99,
@@ -49,3 +69,4 @@ Accept: application/json
 ### 6. Delete the created product
 DELETE {{baseUrl}}/api/products/{{productId}}
 Accept: application/json
+Authorization: {{adminToken}}
