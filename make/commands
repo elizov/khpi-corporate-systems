@@ -7,6 +7,12 @@ run:
 	cd ./app && ./mvnw clean spring-boot:run
 
 
+## runa: Run the admin app
+.PHONY: runa
+runa:
+	cd ./admin && ./mvnw clean spring-boot:run
+
+
 ## git: Open git repository
 .PHONY: git
 git:
@@ -17,6 +23,12 @@ git:
 .PHONY: web
 web:
 	open http://localhost:3000
+
+
+## weba: Open the web
+.PHONY: weba
+weba:
+	open http://localhost:3100
 
 
 ## swagger: Open the swagger docs
