@@ -5,6 +5,7 @@ import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
 import com.shop.app.model.OrderItem;
+import com.shop.app.model.OrderStatus;
 import com.shop.app.model.User;
 import com.shop.app.repository.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class OrderService {
         order.setDeliveryMethod(checkoutForm.getDeliveryMethod());
         order.setPaymentMethod(checkoutForm.getPaymentMethod());
         order.setNotes(checkoutForm.getNotes());
+        order.setStatus(OrderStatus.NEW);
         order.setTotalQuantity(totalQuantity);
         order.setTotalPrice(totalPrice == null ? BigDecimal.ZERO : totalPrice.setScale(2, RoundingMode.HALF_UP));
         order.setUser(user);

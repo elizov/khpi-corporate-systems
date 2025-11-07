@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_method VARCHAR(60) NOT NULL,
     card_last_four VARCHAR(4),
     notes VARCHAR(300),
+    status VARCHAR(20) NOT NULL DEFAULT 'NEW',
+    cancellation_reason VARCHAR(500),
     user_id BIGINT,
     total_quantity INT NOT NULL,
     total_price DECIMAL(12, 2) NOT NULL,
