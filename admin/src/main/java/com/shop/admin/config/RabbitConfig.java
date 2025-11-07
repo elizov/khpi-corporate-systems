@@ -17,13 +17,13 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
 
     @Bean
-    public Queue orderQueue(@Value("${app.messaging.order-queue}") String queueName) {
+    public Queue orderQueue(@Value("${app.messaging.queues.new}") String queueName) {
         // Queue with new orders coming from the storefront service
         return QueueBuilder.durable(queueName).build();
     }
 
     @Bean
-    public TopicExchange orderEventsExchange(@Value("${app.messaging.events-exchange}") String exchangeName) {
+    public TopicExchange orderEventsExchange(@Value("${app.messaging.exchanges.events}") String exchangeName) {
         // Topic exchange for routing confirmed/canceled events to different services
         return new TopicExchange(exchangeName, true, false);
     }

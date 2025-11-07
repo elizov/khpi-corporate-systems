@@ -17,7 +17,7 @@ public class OrderQueueListener {
         this.dashboardService = dashboardService;
     }
 
-    @RabbitListener(queues = "${app.messaging.order-queue}")
+    @RabbitListener(queues = "${app.messaging.queues.new}")
     public void onOrderCreated(OrderCreatedMessage message) {
         log.info("Received order {} for user {}", message.orderId(), message.username());
         dashboardService.handleIncomingOrder(message);

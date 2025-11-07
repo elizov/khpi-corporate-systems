@@ -19,7 +19,7 @@ public class OrderMessagePublisher {
     private final String orderQueue;
 
     public OrderMessagePublisher(RabbitTemplate rabbitTemplate,
-                                 @Value("${app.messaging.order-queue}") String orderQueue) {
+                                 @Value("${app.messaging.queues.new}") String orderQueue) {
         this.rabbitTemplate = rabbitTemplate;
         this.orderQueue = orderQueue;
     }

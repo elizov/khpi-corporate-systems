@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
 
     @Bean
-    public Queue orderQueue(@Value("${app.messaging.order-queue}") String queueName) {
+    public Queue orderQueue(@Value("${app.messaging.queues.new}") String queueName) {
         return QueueBuilder.durable(queueName).build();
     }
 
