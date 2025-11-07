@@ -1,5 +1,6 @@
 package com.shop.app.service;
 
+import com.shop.app.messaging.OrderMessagePublisher;
 import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
@@ -20,9 +21,12 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderMessagePublisher orderMessagePublisher;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository,
+                        OrderMessagePublisher orderMessagePublisher) {
         this.orderRepository = orderRepository;
+        this.orderMessagePublisher = orderMessagePublisher;
     }
 
     @Transactional
@@ -72,7 +76,9 @@ public class OrderService {
             order.getItems().add(orderItem);
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        orderMessagePublisher.publishOrderCreated(savedOrder);
+        return savedOrder;
     }
 
     @Transactional(readOnly = true)
