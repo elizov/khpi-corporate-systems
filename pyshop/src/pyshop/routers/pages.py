@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Optional
 
@@ -39,6 +39,21 @@ def build_order_context(order: Order) -> dict:
     }
 
 
+def _parse_decimal_query(value: Optional[str]) -> tuple[Optional[Decimal], Optional[str]]:
+    if value is None:
+        return None, None
+    cleaned = value.strip()
+    if not cleaned:
+        return None, None
+    try:
+        parsed = Decimal(cleaned)
+    except InvalidOperation:
+        return None, f"'{value}' is not a valid number"
+    if parsed < 0:
+        return None, "Price must be non-negative"
+    return parsed, None
+
+
 def template_context(request: Request, session: Session, extra: Optional[dict] = None):
     cart = load_cart(request)
     context = {
@@ -58,17 +73,20 @@ def home(request: Request, session: Session = Depends(db_session)):
 @router.get("/products")
 def products(
     request: Request,
-    minPrice: Optional[Decimal] = None,
-    maxPrice: Optional[Decimal] = None,
+    minPrice: Optional[str] = None,
+    maxPrice: Optional[str] = None,
     search: Optional[str] = None,
     sort: Optional[str] = None,
     session: Session = Depends(db_session),
 ):
     query = session.query(Product)
-    if minPrice is not None:
-        query = query.filter(Product.price >= minPrice)
-    if maxPrice is not None:
-        query = query.filter(Product.price <= maxPrice)
+    parsed_min, error_min = _parse_decimal_query(minPrice)
+    parsed_max, error_max = _parse_decimal_query(maxPrice)
+    filter_error = error_min or error_max
+    if parsed_min is not None:
+        query = query.filter(Product.price >= parsed_min)
+    if parsed_max is not None:
+        query = query.filter(Product.price <= parsed_max)
     if search:
         query = query.filter(Product.name.ilike(f"%{search}%") | Product.description.ilike(f"%{search}%"))
     if sort == "asc":
@@ -84,6 +102,7 @@ def products(
         "max_price": maxPrice,
         "search": search,
         "sort": sort,
+        "filter_error": filter_error,
     }
     return templates.TemplateResponse("products.html", template_context(request, session, context))
 

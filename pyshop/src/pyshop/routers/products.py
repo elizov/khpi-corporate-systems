@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException, status
@@ -16,19 +16,20 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 
 @router.get("", response_model=list[ProductResponse])
 def list_products(
-    min_price: Optional[Decimal] = Query(None, ge=0),
-    max_price: Optional[Decimal] = Query(None, ge=0),
+    min_price: Optional[str] = Query(None, alias="minPrice"),
+    max_price: Optional[str] = Query(None, alias="maxPrice"),
     search: Optional[str] = Query(None),
     sort_field: Optional[str] = Query(None, alias="sortField"),
     sort_direction: Optional[str] = Query(None, alias="sortDirection"),
     session: Session = Depends(db_session),
 ):
     query = session.query(Product)
-
-    if min_price is not None:
-        query = query.filter(Product.price >= min_price)
-    if max_price is not None:
-        query = query.filter(Product.price <= max_price)
+    parsed_min = _parse_decimal(min_price)
+    parsed_max = _parse_decimal(max_price)
+    if parsed_min is not None:
+        query = query.filter(Product.price >= parsed_min)
+    if parsed_max is not None:
+        query = query.filter(Product.price <= parsed_max)
     if search:
         like = f"%{search.lower()}%"
         query = query.filter(
@@ -42,6 +43,21 @@ def list_products(
         query = query.order_by(asc(sort_column) if direction == "asc" else desc(sort_column))
 
     return query.all()
+
+
+def _parse_decimal(value: Optional[str]) -> Optional[Decimal]:
+    if value is None:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    try:
+        parsed = Decimal(value)
+    except InvalidOperation:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid decimal value: {value}")
+    if parsed < 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Price must be non-negative")
+    return parsed
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
