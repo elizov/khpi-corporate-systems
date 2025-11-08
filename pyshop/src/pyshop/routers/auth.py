@@ -65,7 +65,7 @@ async def register_submit(request: Request, session: Session = Depends(db_sessio
 @router.get("/logout")
 def logout(request: Request):
     request.session.pop("user", None)
-    return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse("/login", status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _context(request: Request, session: Session, extra: dict | None = None) -> dict:
