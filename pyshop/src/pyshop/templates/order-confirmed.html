@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center my-5">
+    <p class="mb-4">
+        Order number:
+        <span class="fw-bold">{{ order.id }}</span>
+    </p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Delivery information</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Full name</dt>
+                    <dd class="col-sm-8">{{ order.full_name }}</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ order.email }}</dd>
+
+                    <dt class="col-sm-4">Phone</dt>
+                    <dd class="col-sm-8">{{ order.phone }}</dd>
+
+                    <dt class="col-sm-4">Address</dt>
+                    <dd class="col-sm-8">
+                        <div>{{ order.address }}</div>
+                        <div>{{ order.city }}, {{ order.postal_code }}</div>
+                    </dd>
+
+                    <dt class="col-sm-4">Delivery</dt>
+                    <dd class="col-sm-8">{{ order.delivery_method }}</dd>
+
+                    <dt class="col-sm-4">Payment</dt>
+                    <dd class="col-sm-8">{{ order.payment_method }}</dd>
+
+                    {% if card_required %}
+                        <dt class="col-sm-4">Card</dt>
+                        <dd class="col-sm-8">{{ masked_card_number }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-4">Notes</dt>
+                    <dd class="col-sm-8">{{ order.notes or '—' }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Order summary</h2>
+                <ul class="list-group mb-3">
+                    {% for item in order.items %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    {{ item.product_name }}
+                                    <span class="text-muted"> × </span>{{ item.quantity }}
+                                </span>
+                                <span>{{ "{:,.2f}".format(item.subtotal) }} UAH</span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>Total items</span>
+                        <span>{{ order.total_quantity }} pcs</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>Paid</span>
+                        <span>{{ "{:,.2f}".format(order.total_price) }} UAH</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Created at</span>
+                        <span>{{ created_at_formatted }}</span>
+                    </li>
+                </ul>
+                <div class="d-grid">
+                    <a href="/products" class="btn btn-primary">Continue shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

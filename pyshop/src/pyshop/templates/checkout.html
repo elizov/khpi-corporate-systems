@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4 text-primary">Checkout</h1>
+
+{% if errors %}
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h4 mb-3">Payment &amp; Delivery Information</h2>
+
+                <form method="post" action="/checkout" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full name</label>
+                            <input type="text" class="form-control" name="full_name" value="{{ form.get('full_name','') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="{{ form.get('email','') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone" value="{{ form.get('phone','') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" value="{{ form.get('city','') }}" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" name="address" value="{{ form.get('address','') }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Postal code</label>
+                            <input type="text" class="form-control" name="postal_code" value="{{ form.get('postal_code','') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Delivery method</label>
+                            <select class="form-select" name="delivery_method" required>
+                                <option value="" disabled {% if not form.get('delivery_method') %}selected{% endif %}>Select delivery method</option>
+                                {% for method in delivery_methods %}
+                                    <option value="{{ method }}" {% if form.get('delivery_method') == method %}selected{% endif %}>{{ method }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment method</label>
+                            <select class="form-select" name="payment_method" id="payment-method-select"
+                                    data-cash-value="{{ cash_payment_method }}" required>
+                                <option value="" disabled {% if not form.get('payment_method') %}selected{% endif %}>Select payment method</option>
+                                {% for method in payment_methods %}
+                                    <option value="{{ method }}" {% if form.get('payment_method') == method %}selected{% endif %}>{{ method }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="card-number-group">
+                            <label class="form-label">Card number</label>
+                            <input type="text" class="form-control" name="card_number" id="card-number-input"
+                                   value="{{ form.get('card_number','') }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes (optional)</label>
+                            <textarea class="form-control" rows="3" name="notes">{{ form.get('notes','') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <a href="/cart" class="btn btn-outline-secondary me-2">Back to cart</a>
+                        <button type="submit" class="btn btn-primary">Continue to confirmation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h4 mb-3">Order summary</h2>
+                <div class="list-group mb-3">
+                    <div class="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>Items</span>
+                        <span>{{ total_quantity }} pcs</span>
+                    </div>
+                    <div class="list-group-item">
+                        <ul class="list-unstyled mb-0">
+                            {% for item in items %}
+                                <li>
+                                    {{ item.name }}
+                                    <span class="text-muted"> × </span>{{ item.quantity }}
+                                    <span class="text-muted"> — </span>{{ "{:,.2f}".format(item.subtotal) }} UAH
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>Total</span>
+                        <span>{{ "{:,.2f}".format(total_price) }} UAH</span>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0">
+                    After submitting the form you will be able to review and confirm your order details.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const paymentSelect = document.getElementById('payment-method-select');
+        const cardGroup = document.getElementById('card-number-group');
+        const cardInput = document.getElementById('card-number-input');
+        if (!paymentSelect || !cardGroup) {
+            return;
+        }
+        const cashValue = (paymentSelect.dataset.cashValue || 'Cash on Delivery').toLowerCase();
+        function toggleCardVisibility() {
+            const selected = (paymentSelect.value || '').trim().toLowerCase();
+            const isCash = selected === cashValue;
+            if (isCash) {
+                cardGroup.classList.add('d-none');
+                if (cardInput) {
+                    cardInput.value = '';
+                    cardInput.disabled = true;
+                }
+            } else {
+                cardGroup.classList.remove('d-none');
+                if (cardInput) {
+                    cardInput.disabled = false;
+                }
+            }
+        }
+        paymentSelect.addEventListener('change', toggleCardVisibility);
+        toggleCardVisibility();
+    });
+</script>
+{% endblock %}

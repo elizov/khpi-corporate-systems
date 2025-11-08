@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-5">
+    <div id="cart-empty-state" class="alert alert-info{% if items %} d-none{% endif %}">
+        Your cart is empty. Browse products to add items here.
+    </div>
+
+    <div id="cart-table-wrapper" class="{% if not items %}d-none{% endif %}">
+        <div class="table-responsive">
+            <table id="cart-table" class="table table-striped align-middle">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th class="text-center">Quantity</th>
+                    <th>Subtotal</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="cart-table-body">
+                {% for item in items %}
+                    <tr data-product-id="{{ item.product_id }}">
+                        <td>{{ item.name }}</td>
+                        <td>{{ "{:,.2f}".format(item.price) }} UAH</td>
+                        <td class="text-center">
+                            <div class="input-group input-group-sm justify-content-center">
+                                <button type="button" class="btn btn-outline-secondary cart-qty-decrease">-</button>
+                                <input type="number" class="form-control cart-quantity-input text-center mx-1"
+                                       min="1" value="{{ item.quantity }}">
+                                <button type="button" class="btn btn-outline-secondary cart-qty-increase">+</button>
+                            </div>
+                        </td>
+                        <td class="cart-item-subtotal">{{ "{:,.2f}".format(item.subtotal) }} UAH</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm cart-remove-btn">Remove</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-end gap-4">
+            <span class="fw-bold">Items: <span id="cart-total-quantity">{{ total_quantity }}</span></span>
+            <span class="fw-bold">Total: <span id="cart-total-price">{{ "{:,.2f}".format(total_price) }} UAH</span></span>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+            <a href="/checkout" class="btn btn-primary">Proceed to checkout</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cartCount = document.getElementById('cart-count');
+        const cartTableBody = document.getElementById('cart-table-body');
+        const cartTotalQuantity = document.getElementById('cart-total-quantity');
+        const cartTotalPrice = document.getElementById('cart-total-price');
+        const emptyState = document.getElementById('cart-empty-state');
+        const tableWrapper = document.getElementById('cart-table-wrapper');
+
+        function notify(type, message) {
+            if (typeof window.showToast === 'function') {
+                window.showToast(message, type);
+            } else if (type === 'danger') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        function formatCurrency(value) {
+            const number = Number(value);
+            return Number.isFinite(number) ? number.toFixed(2) + ' UAH' : value;
+        }
+
+        function updateSummary(totalQuantity, totalPrice) {
+            if (typeof totalQuantity === 'number') {
+                if (cartTotalQuantity) cartTotalQuantity.textContent = totalQuantity;
+                if (cartCount) cartCount.textContent = totalQuantity;
+            }
+            if (typeof totalPrice === 'number' && cartTotalPrice) {
+                cartTotalPrice.textContent = formatCurrency(totalPrice);
+            }
+        }
+
+        function toggleEmptyState() {
+            const hasRows = cartTableBody && cartTableBody.querySelectorAll('tr').length > 0;
+            if (emptyState) emptyState.classList.toggle('d-none', hasRows);
+            if (tableWrapper) tableWrapper.classList.toggle('d-none', !hasRows);
+        }
+
+        function updateQuantity(productId, quantity) {
+            fetch(`/api/cart/items/${productId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({quantity})
+            })
+                .then(res => res.json().then(data => ({ok: res.ok, data})))
+                .then(result => {
+                    if (!result.ok) {
+                        notify('danger', result.data.error || 'Unable to update cart');
+                        return;
+                    }
+                    updateSummary(result.data.totalQuantity, result.data.totalPrice);
+                    const row = cartTableBody.querySelector(`tr[data-product-id="${productId}"]`);
+                    if (result.data.removed) {
+                        row?.remove();
+                    } else if (row) {
+                        row.querySelector('.cart-quantity-input').value = result.data.quantity;
+                        row.querySelector('.cart-item-subtotal').textContent = formatCurrency(result.data.subtotal);
+                    }
+                    toggleEmptyState();
+                })
+                .catch(() => notify('danger', 'Unable to update cart'));
+        }
+
+        cartTableBody?.addEventListener('click', function (event) {
+            const target = event.target;
+            const row = target.closest('tr[data-product-id]');
+            if (!row) return;
+            const productId = row.dataset.productId;
+
+            if (target.classList.contains('cart-qty-decrease')) {
+                const input = row.querySelector('.cart-quantity-input');
+                const newValue = Math.max(1, Number(input.value) - 1);
+                input.value = newValue;
+                updateQuantity(productId, newValue);
+            } else if (target.classList.contains('cart-qty-increase')) {
+                const input = row.querySelector('.cart-quantity-input');
+                const newValue = Number(input.value) + 1;
+                input.value = newValue;
+                updateQuantity(productId, newValue);
+            } else if (target.classList.contains('cart-remove-btn')) {
+                updateQuantity(productId, 0);
+            }
+        });
+
+        cartTableBody?.addEventListener('change', function (event) {
+            const input = event.target;
+            if (!input.classList.contains('cart-quantity-input')) return;
+            const row = input.closest('tr[data-product-id]');
+            const productId = row.dataset.productId;
+            const newValue = Math.max(1, Number(input.value) || 1);
+            input.value = newValue;
+            updateQuantity(productId, newValue);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="get" action="/products" class="row g-3 mb-4">
+    <div class="col-md-2">
+        <input type="number" class="form-control" name="minPrice"
+               placeholder="Min price" value="{{ min_price or '' }}">
+    </div>
+    <div class="col-md-2">
+        <input type="number" class="form-control" name="maxPrice"
+               placeholder="Max price" value="{{ max_price or '' }}">
+    </div>
+    <div class="col-md-4">
+        <input type="text" class="form-control" name="search"
+               placeholder="Search..." value="{{ search or '' }}">
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" name="sort">
+            <option value="">Sort by</option>
+            <option value="asc" {{ "selected" if sort == "asc" else "" }}>Price: Low → High</option>
+            <option value="desc" {{ "selected" if sort == "desc" else "" }}>Price: High → Low</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Apply</button>
+    </div>
+</form>
+
+<div class="row">
+    {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-muted">{{ product.description or '' }}</p>
+                    <p class="text-muted">{{ product.category }}</p>
+                    <p class="fw-bold text-primary">{{ "{:,.2f}".format(product.price) }} UAH</p>
+                    <button type="button"
+                            class="btn btn-success w-100 mt-auto btn-add-to-cart"
+                            data-product-id="{{ product.id }}">
+                        Add to cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cartCount = document.getElementById('cart-count');
+
+        function notify(type, message) {
+            if (typeof window.showToast === 'function') {
+                window.showToast(message, type);
+            } else if (type === 'danger') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        document.querySelectorAll('.btn-add-to-cart').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const productId = this.dataset.productId;
+                fetch('/api/cart/items', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({productId: Number(productId)})
+                })
+                    .then(response => response.json().then(data => ({ok: response.ok, data})))
+                    .then(result => {
+                        if (result.ok) {
+                            notify('success', result.data.message || 'Product added to cart');
+                            if (cartCount && typeof result.data.totalQuantity === 'number') {
+                                cartCount.textContent = result.data.totalQuantity;
+                            }
+                        } else {
+                            notify('danger', result.data.message || 'Unable to add product to cart');
+                        }
+                    })
+                    .catch(() => notify('danger', 'Unable to add product to cart'));
+            });
+        });
+    });
+</script>
+{% endblock %}
