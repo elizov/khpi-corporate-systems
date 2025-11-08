@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..dependencies import db_session
-from ..models import Product, Order
+from ..models import Product, Order, User
 from ..services.cart_session import load_cart, save_cart
 from ..services.order_service import create_order
 from ..schemas.order import OrderCreate, OrderItemPayload, OrderResponse
@@ -59,6 +59,7 @@ def template_context(request: Request, session: Session, extra: Optional[dict] =
     context = {
         "request": request,
         "cart_count": cart.total_quantity,
+        "current_user": request.session.get("user"),
     }
     if extra:
         context.update(extra)
@@ -124,7 +125,17 @@ def checkout_page(request: Request, session: Session = Depends(db_session)):
     cart = load_cart(request)
     if cart.total_quantity == 0:
         return RedirectResponse("/cart", status_code=303)
-    stored_form = request.session.get("checkout_form", {})
+    stored_form = dict(request.session.get("checkout_form", {}))
+    current_user = request.session.get("user")
+    if current_user:
+        db_user = session.get(User, current_user.get("id"))
+        if db_user:
+            stored_form.setdefault("full_name", db_user.username)
+            stored_form.setdefault("email", db_user.email)
+            stored_form.setdefault("phone", db_user.phone or "")
+            stored_form.setdefault("address", db_user.address or "")
+            stored_form.setdefault("city", db_user.city or "")
+            stored_form.setdefault("postal_code", db_user.postal_code or "")
     context = {
         "page_title": "Checkout",
         "form": stored_form,
@@ -221,7 +232,9 @@ def checkout_confirm(request: Request, session: Session = Depends(db_session)):
         items=items_payload,
     )
 
-    order = create_order(session, order_payload)
+    user_session = request.session.get("user")
+    user_id = user_session.get("id") if user_session else None
+    order = create_order(session, order_payload, user_id=user_id)
 
     cart.clear()
     save_cart(request, cart)
@@ -237,3 +250,27 @@ def view_order(order_id: str, request: Request, session: Session = Depends(db_se
         return RedirectResponse("/products", status_code=303)
     context = build_order_context(order)
     return templates.TemplateResponse("order-confirmed.html", template_context(request, session, context))
+
+
+@router.get("/orders/my")
+def my_orders(request: Request, session: Session = Depends(db_session)):
+    current_user = request.session.get("user")
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    orders = (
+        session.query(Order)
+        .filter_by(user_id=current_user.get("id"))
+        .order_by(Order.created_at.desc())
+        .all()
+    )
+    order_list = [
+        {
+            "id": order.id,
+            "created_at": order.created_at.strftime("%d %b %Y %H:%M"),
+            "total_quantity": order.total_quantity,
+            "total_price": order.total_price,
+        }
+        for order in orders
+    ]
+    context = {"page_title": "My Orders", "orders": order_list}
+    return templates.TemplateResponse("orders.html", template_context(request, session, context))

@@ -48,6 +48,7 @@ class Order(Base):
         Enum(OrderStatusEnum), default=OrderStatusEnum.NEW, nullable=False
     )
     cancellation_reason: Mapped[str | None] = mapped_column(String(500))
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
     total_quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     total_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
 
@@ -56,6 +57,7 @@ class Order(Base):
         back_populates="order",
         cascade="all, delete-orphan",
     )
+    user: Mapped["User"] = relationship("User", back_populates="orders")
 
 
 class OrderItem(Base):
@@ -70,3 +72,20 @@ class OrderItem(Base):
     subtotal: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
 
     order: Mapped[Order] = relationship("Order", back_populates="items")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(20), default="USER", nullable=False)
+    age: Mapped[int] = mapped_column(Integer, nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(50))
+    address: Mapped[str | None] = mapped_column(String(255))
+    city: Mapped[str | None] = mapped_column(String(100))
+    postal_code: Mapped[str | None] = mapped_column(String(50))
+
+    orders: Mapped[list[Order]] = relationship("Order", back_populates="user")

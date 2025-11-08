@@ -10,7 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .config import get_settings
 from .database import init_db
-from .routers import cart_api, orders, pages, products
+from .routers import cart_api, orders, pages, products, auth
 
 settings = get_settings()
 
@@ -27,6 +27,7 @@ app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(cart_api.router)
 app.include_router(pages.router)
+app.include_router(auth.router)
 
 
 @app.exception_handler(ValueError)

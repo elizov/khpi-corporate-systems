@@ -75,7 +75,16 @@
                         <span id="cart-count" class="badge bg-secondary ms-2">{{ cart_count or 0 }}</span>
                     </a>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="/checkout">Checkout</a></li>
+                {% if current_user %}
+                    <li class="nav-item"><a class="nav-link" href="/orders/my">My Orders</a></li>
+                    <li class="nav-item">
+                        <span class="nav-link">Hello, <b>{{ current_user.username }}</b></span>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+                {% endif %}
             </ul>
         </div>
     </div>

@@ -9,7 +9,7 @@ from ..models import Order, OrderItem
 from ..schemas.order import OrderCreate
 
 
-def create_order(session: Session, payload: OrderCreate) -> Order:
+def create_order(session: Session, payload: OrderCreate, user_id: int | None = None) -> Order:
     if not payload.items:
         raise ValueError("Order must contain at least one item")
 
@@ -28,6 +28,7 @@ def create_order(session: Session, payload: OrderCreate) -> Order:
         total_quantity=total_qty,
         total_price=total_price,
         notes=payload.notes,
+        user_id=user_id,
     )
 
     if payload.card_number:
