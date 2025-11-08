@@ -13,6 +13,12 @@ runa:
 	cd ./admin && ./mvnw clean spring-boot:run
 
 
+## runp: Run the python app
+.PHONY: runp
+runp:
+	cd ./pyshop && source .venv/bin/activate && uvicorn pyshop.main:app --reload
+
+
 ## git: Open git repository
 .PHONY: git
 git:
