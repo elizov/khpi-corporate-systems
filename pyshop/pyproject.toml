@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyshop"
+version = "0.1.0"
+description = "FastAPI-based web store with RabbitMQ messaging"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "sqlalchemy>=2.0.29",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.1",
+    "python-dotenv>=1.0.0",
+    "itsdangerous>=2.2.0",
+    "pymysql>=1.1.1",
+    "jinja2>=3.1.4",
+    "alembic>=1.13.1",
+    "pika>=1.3.2",
+    "python-multipart>=0.0.9"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
