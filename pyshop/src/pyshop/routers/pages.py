@@ -269,6 +269,8 @@ def my_orders(request: Request, session: Session = Depends(db_session)):
             "created_at": order.created_at.strftime("%d %b %Y %H:%M"),
             "total_quantity": order.total_quantity,
             "total_price": order.total_price,
+            "payment_method": order.payment_method,
+            "delivery_method": order.delivery_method,
         }
         for order in orders
     ]
