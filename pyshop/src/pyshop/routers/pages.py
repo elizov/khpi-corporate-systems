@@ -30,12 +30,17 @@ def build_order_context(order: Order) -> dict:
     card_required = bool(card_last_four and not is_cash)
     masked_card = f"**** **** **** {card_last_four}" if card_last_four else ""
     created_at_formatted = order_response.created_at.strftime("%d %b %Y %H:%M")
+    raw_status = getattr(order, "status", "")
+    if hasattr(raw_status, "value"):
+        raw_status = raw_status.value
+    status_label = (raw_status or "").lower()
     return {
         "page_title": "Order confirmed",
         "order": order_response,
         "card_required": card_required,
         "masked_card_number": masked_card,
         "created_at_formatted": created_at_formatted,
+        "status_label": status_label,
     }
 
 
@@ -271,6 +276,7 @@ def my_orders(request: Request, session: Session = Depends(db_session)):
             "total_price": order.total_price,
             "payment_method": order.payment_method,
             "delivery_method": order.delivery_method,
+            "status": getattr(order.status, "value", order.status) if order.status else "",
         }
         for order in orders
     ]
