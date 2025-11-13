@@ -12,7 +12,8 @@ from typing import Any, Dict, Optional, Tuple
 
 import requests
 
-DEFAULT_BASE_URL = "http://localhost:3000"
+DEFAULT_BASE_URL = "http://localhost:8000"
+# DEFAULT_BASE_URL = "http://localhost:3000"
 DEFAULT_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 
 
