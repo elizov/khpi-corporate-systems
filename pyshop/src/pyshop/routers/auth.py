@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, Request, status, Body
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -66,6 +67,17 @@ async def register_submit(request: Request, session: Session = Depends(db_sessio
 def logout(request: Request):
     request.session.pop("user", None)
     return RedirectResponse("/login", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/api/auth/token")
+def api_token(request_data: UserLogin = Body(...), session: Session = Depends(db_session)):
+    user_session = authenticate(session, request_data)
+    if not user_session:
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={})
+
+    raw_credentials = f"{request_data.username}:{request_data.password}"
+    token = "Basic " + base64.b64encode(raw_credentials.encode("utf-8")).decode("utf-8")
+    return {"token": token, "role": "USER"}
 
 
 def _context(request: Request, session: Session, extra: dict | None = None) -> dict:

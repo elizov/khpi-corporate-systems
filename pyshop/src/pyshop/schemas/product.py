@@ -26,3 +26,16 @@ class ProductResponse(ProductBase):
 
     class Config:
         from_attributes = True
+
+
+class ProductPatch(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
+    category: Optional[str] = Field(None, max_length=100)
+    price: Optional[Decimal] = Field(None, gt=0)
+    description: Optional[str] = Field(None, max_length=500)
+
+    def has_updates(self) -> bool:
+        return any(
+            getattr(self, field) is not None
+            for field in ("name", "category", "price", "description")
+        )

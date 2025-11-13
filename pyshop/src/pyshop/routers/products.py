@@ -3,13 +3,13 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 
 from ..dependencies import db_session
 from ..models import Product
-from ..schemas import ProductResponse
+from ..schemas import ProductResponse, ProductCreate, ProductUpdate, ProductPatch
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -66,3 +66,67 @@ def get_product(product_id: int, session: Session = Depends(db_session)):
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     return product
+
+
+@router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+def create_product(payload: ProductCreate, session: Session = Depends(db_session)):
+    product = Product(
+        name=payload.name,
+        category=payload.category,
+        price=payload.price,
+        description=payload.description,
+    )
+    session.add(product)
+    session.commit()
+    session.refresh(product)
+    return product
+
+
+@router.put("/{product_id}", response_model=ProductResponse)
+def replace_product(product_id: int, payload: ProductUpdate, session: Session = Depends(db_session)):
+    product = session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    product.name = payload.name
+    product.category = payload.category
+    product.price = payload.price
+    product.description = payload.description
+    session.commit()
+    session.refresh(product)
+    return product
+
+
+@router.patch("/{product_id}", response_model=ProductResponse)
+def patch_product(
+    product_id: int,
+    payload: ProductPatch = Body(...),
+    session: Session = Depends(db_session),
+):
+    product = session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    updates = {}
+    for field in ("name", "category", "price", "description"):
+        value = getattr(payload, field, None)
+        if value is not None:
+            updates[field] = value
+
+    if not updates:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request body is empty or invalid")
+
+    for key, value in updates.items():
+        setattr(product, key, value)
+
+    session.commit()
+    session.refresh(product)
+    return product
+
+
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product(product_id: int, session: Session = Depends(db_session)):
+    product = session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    session.delete(product)
+    session.commit()
