@@ -11,10 +11,15 @@ from ..dependencies import db_session
 from ..models import Product
 from ..schemas import ProductResponse, ProductCreate, ProductUpdate, ProductPatch
 
-router = APIRouter(prefix="/api/products", tags=["products"])
+router = APIRouter(prefix="/api/products", tags=["Products"])
 
 
-@router.get("", response_model=list[ProductResponse])
+@router.get(
+    "",
+    response_model=list[ProductResponse],
+    summary="Get all products",
+    description="Returns all products with optional filters for price range, keyword search, and sorting.",
+)
 def list_products(
     min_price: Optional[str] = Query(None, alias="minPrice"),
     max_price: Optional[str] = Query(None, alias="maxPrice"),
@@ -60,7 +65,12 @@ def _parse_decimal(value: Optional[str]) -> Optional[Decimal]:
     return parsed
 
 
-@router.get("/{product_id}", response_model=ProductResponse)
+@router.get(
+    "/{product_id}",
+    response_model=ProductResponse,
+    summary="Get product by id",
+    responses={404: {"description": "Product not found"}},
+)
 def get_product(product_id: int, session: Session = Depends(db_session)):
     product = session.get(Product, product_id)
     if not product:
@@ -68,7 +78,13 @@ def get_product(product_id: int, session: Session = Depends(db_session)):
     return product
 
 
-@router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ProductResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create product",
+    responses={201: {"description": "Product created"}},
+)
 def create_product(payload: ProductCreate, session: Session = Depends(db_session)):
     product = Product(
         name=payload.name,
@@ -82,7 +98,15 @@ def create_product(payload: ProductCreate, session: Session = Depends(db_session
     return product
 
 
-@router.put("/{product_id}", response_model=ProductResponse)
+@router.put(
+    "/{product_id}",
+    response_model=ProductResponse,
+    summary="Replace product",
+    responses={
+        200: {"description": "Product replaced"},
+        404: {"description": "Product not found"},
+    },
+)
 def replace_product(product_id: int, payload: ProductUpdate, session: Session = Depends(db_session)):
     product = session.get(Product, product_id)
     if not product:
@@ -96,7 +120,16 @@ def replace_product(product_id: int, payload: ProductUpdate, session: Session = 
     return product
 
 
-@router.patch("/{product_id}", response_model=ProductResponse)
+@router.patch(
+    "/{product_id}",
+    response_model=ProductResponse,
+    summary="Partially update product",
+    responses={
+        200: {"description": "Product updated"},
+        400: {"description": "Request body is empty or invalid"},
+        404: {"description": "Product not found"},
+    },
+)
 def patch_product(
     product_id: int,
     payload: ProductPatch = Body(...),
@@ -123,7 +156,12 @@ def patch_product(
     return product
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete product",
+    responses={404: {"description": "Product not found"}},
+)
 def delete_product(product_id: int, session: Session = Depends(db_session)):
     product = session.get(Product, product_id)
     if not product:

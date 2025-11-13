@@ -12,6 +12,8 @@ cp .env.example .env
 uvicorn pyshop.main:app --reload
 ```
 
+Swagger UI: <http://localhost:8000/docs>
+
 Демо-дані можна створити командою:
 
 ```bash
@@ -37,10 +39,17 @@ pyshop/
 
 ## REST API
 
-| Method | Path                   | Опис                             |
-|--------|------------------------|----------------------------------|
-| GET    | `/api/products`        | Повертає список товарів із фільтрами |
-| GET    | `/api/products/{id}`   | Деталі товару                    |
-| POST   | `/api/orders`          | Створює замовлення, шле подію в RabbitMQ |
-| GET    | `/api/orders/{orderId}`| Деталі замовлення                |
-
+| Method | Path                               | Опис |
+|--------|------------------------------------|------|
+| GET    | `/api/products`                    | Повертає список товарів із фільтрами |
+| GET    | `/api/products/{id}`               | Деталі товару |
+| POST   | `/api/products`                    | Створює новий товар |
+| PUT    | `/api/products/{id}`               | Повністю замінює існуючий товар |
+| PATCH  | `/api/products/{id}`               | Частково оновлює товар |
+| DELETE | `/api/products/{id}`               | Видаляє товар |
+| POST   | `/api/orders`                      | Створює замовлення, шле подію в RabbitMQ |
+| GET    | `/api/orders/{orderId}`            | Деталі замовлення |
+| POST   | `/api/cart/items`                  | Додає товар у кошик сесії |
+| PUT    | `/api/cart/items/{productId}`      | Змінює кількість або прибирає товар |
+| DELETE | `/api/cart/items/{productId}`      | Видаляє товар з кошика |
+| POST   | `/api/auth/token`                  | Видає Basic-token для інтеграцій |

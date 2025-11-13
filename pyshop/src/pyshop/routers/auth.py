@@ -7,15 +7,19 @@ from fastapi import APIRouter, Depends, Request, status, Body
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from ..dependencies import db_session
 from ..schemas import UserRegister, UserLogin
 from ..services.user_service import register_user, authenticate
 from ..services.cart_session import load_cart
-
+class TokenResponse(BaseModel):
+    token: str
+    role: str
 
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 router = APIRouter()
+api_router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 
 @router.get("/login")
@@ -69,7 +73,12 @@ def logout(request: Request):
     return RedirectResponse("/login", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.post("/api/auth/token")
+@api_router.post(
+    "/token",
+    response_model=TokenResponse,
+    summary="Obtain Basic authentication token",
+    responses={401: {"description": "Invalid credentials"}},
+)
 def api_token(request_data: UserLogin = Body(...), session: Session = Depends(db_session)):
     user_session = authenticate(session, request_data)
     if not user_session:
@@ -77,7 +86,7 @@ def api_token(request_data: UserLogin = Body(...), session: Session = Depends(db
 
     raw_credentials = f"{request_data.username}:{request_data.password}"
     token = "Basic " + base64.b64encode(raw_credentials.encode("utf-8")).decode("utf-8")
-    return {"token": token, "role": "USER"}
+    return TokenResponse(token=token, role="USER")
 
 
 def _context(request: Request, session: Session, extra: dict | None = None) -> dict:

@@ -30,10 +30,15 @@ class CartActionResponse(BaseModel):
     message: str
 
 
-router = APIRouter(prefix="/api/cart", tags=["cart"])
+router = APIRouter(prefix="/api/cart", tags=["Cart"])
 
 
-@router.post("/items", response_model=CartActionResponse)
+@router.post(
+    "/items",
+    response_model=CartActionResponse,
+    summary="Add item to cart",
+    responses={404: {"description": "Product not found"}},
+)
 def add_to_cart(request: Request, payload: AddToCartRequest, session: Session = Depends(db_session)):
     product = session.get(Product, payload.productId)
     if not product:
@@ -54,7 +59,12 @@ def add_to_cart(request: Request, payload: AddToCartRequest, session: Session = 
     )
 
 
-@router.put("/items/{product_id}", response_model=CartActionResponse)
+@router.put(
+    "/items/{product_id}",
+    response_model=CartActionResponse,
+    summary="Update cart item quantity",
+    responses={404: {"description": "Product not found in cart"}},
+)
 def update_cart_item(request: Request, product_id: int, payload: UpdateCartItemRequest):
     cart = load_cart(request)
     if product_id not in cart.items:
@@ -77,7 +87,12 @@ def update_cart_item(request: Request, product_id: int, payload: UpdateCartItemR
     )
 
 
-@router.delete("/items/{product_id}", response_model=CartActionResponse)
+@router.delete(
+    "/items/{product_id}",
+    response_model=CartActionResponse,
+    summary="Remove item from cart",
+    responses={404: {"description": "Product not found in cart"}},
+)
 def remove_cart_item(request: Request, product_id: int):
     cart = load_cart(request)
     if product_id not in cart.items:

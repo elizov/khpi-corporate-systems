@@ -14,7 +14,19 @@ from .routers import cart_api, orders, pages, products, auth
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name)
+tags_metadata = [
+    {"name": "Products", "description": "Operations for managing catalog products."},
+    {"name": "Orders", "description": "Create orders and inspect their current state."},
+    {"name": "Cart", "description": "Session-based cart helpers for storefront clients."},
+    {"name": "Auth", "description": "Token issuance for calling protected APIs."},
+]
+
+app = FastAPI(
+    title=settings.app_name,
+    version="1.0.0",
+    description="REST API endpoints for the PyShop storefront and integrations.",
+    openapi_tags=tags_metadata,
+)
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 static_dir = Path(__file__).resolve().parent / "static"
@@ -28,6 +40,7 @@ app.include_router(orders.router)
 app.include_router(cart_api.router)
 app.include_router(pages.router)
 app.include_router(auth.router)
+app.include_router(auth.api_router)
 
 
 @app.exception_handler(ValueError)
