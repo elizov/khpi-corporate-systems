@@ -95,6 +95,8 @@ services:
       - db
       - rabbitmq
       - gateway
+      - auth
+      - product
 
   auth:
     build:

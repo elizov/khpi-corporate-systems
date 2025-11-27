@@ -79,9 +79,16 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
         if (matcher.match("/api/products/**", path) && !"GET".equalsIgnoreCase(method)) {
             return false;
         }
-        // Checkout: options are public, placing orders requires auth to forward user headers
-        if (matcher.match("/api/checkout/**", path) && !"GET".equalsIgnoreCase(method)) {
+        // Checkout: allow anonymous GET/POST; protect other verbs
+        if (matcher.match("/api/checkout/**", path)) {
+            return "GET".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method);
+        }
+        // Orders: /my requires auth; other GET order lookups are public, writes stay protected
+        if (matcher.match("/api/orders/my", path)) {
             return false;
+        }
+        if (matcher.match("/api/orders/**", path)) {
+            return "GET".equalsIgnoreCase(method);
         }
         return publicPaths.stream().anyMatch(pattern -> matcher.match(pattern, path));
     }

@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/cart/**").permitAll()
                         .requestMatchers("/api/checkout/**").permitAll()
+                        .requestMatchers("/api/orders/my").authenticated()
                         .requestMatchers("/api/orders/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().permitAll()
