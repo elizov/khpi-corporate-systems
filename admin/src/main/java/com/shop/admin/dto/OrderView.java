@@ -5,7 +5,7 @@ import java.util.List;
 
 public record OrderView(
         String id,
-        String customerName,
+        String fullName,
         String email,
         String phone,
         String address,

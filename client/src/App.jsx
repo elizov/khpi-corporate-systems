@@ -70,6 +70,9 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
+  const [adminOrders, setAdminOrders] = useState([]);
+  const [adminOrdersLoading, setAdminOrdersLoading] = useState(false);
+  const [adminOrdersError, setAdminOrdersError] = useState('');
   const [toast, setToast] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
   const [authToken, setAuthToken] = useState(null);
@@ -104,6 +107,9 @@ export default function App() {
     }
     if (route.startsWith('/orders/my')) {
       loadMyOrders();
+    }
+    if (route.startsWith('/admin/orders')) {
+      loadAdminOrders();
     }
     if (route.startsWith('/checkout/confirm')) {
       if (!checkoutDraft) {
@@ -152,6 +158,8 @@ export default function App() {
   const authHeaders = () => {
     return authToken ? { Authorization: `Bearer ${authToken}` } : {};
   };
+
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.roles?.includes('ADMIN');
 
   const loadProducts = async () => {
     setLoading((prev) => ({ ...prev, products: true }));
@@ -342,6 +350,56 @@ export default function App() {
       setOrdersError(error.message || 'Failed to load orders');
     } finally {
       setOrdersLoading(false);
+    }
+  };
+
+  const loadAdminOrders = async () => {
+    if (!isAdmin) return;
+    setAdminOrdersLoading(true);
+    setAdminOrdersError('');
+    try {
+      const response = await fetchApi(`${API_BASE}/admin/orders`, { headers: authHeaders() });
+      if (!response.ok) {
+        throw new Error('Failed to load orders');
+      }
+      const data = await response.json();
+      setAdminOrders(data);
+    } catch (error) {
+      setAdminOrdersError(error.message || 'Failed to load orders');
+    } finally {
+      setAdminOrdersLoading(false);
+    }
+  };
+
+  const adminConfirm = async (orderId) => {
+    try {
+      const response = await fetchApi(`${API_BASE}/admin/orders/${orderId}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to confirm order');
+      }
+      await loadAdminOrders();
+    } catch (error) {
+      setAdminOrdersError(error.message || 'Failed to confirm order');
+    }
+  };
+
+  const adminCancel = async (orderId) => {
+    const reason = prompt('Cancellation reason (optional):') || '';
+    try {
+      const response = await fetchApi(`${API_BASE}/admin/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to cancel order');
+      }
+      await loadAdminOrders();
+    } catch (error) {
+      setAdminOrdersError(error.message || 'Failed to cancel order');
     }
   };
 
@@ -549,6 +607,68 @@ export default function App() {
               View cart
             </button>
           </div>
+        </div>
+      );
+    }
+
+    if (route.startsWith('/admin/orders')) {
+      if (!isAdmin) {
+        return <div className="alert alert-danger">Access denied</div>;
+      }
+      return (
+        <div className="hero mb-4">
+          <h2 className="mb-3">Order Management</h2>
+          {adminOrdersError && <div className="alert alert-danger">{adminOrdersError}</div>}
+          {adminOrdersLoading ? (
+            <div>Loading...</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Created</th>
+                    <th className="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminOrders.map((o) => (
+                    <tr key={o.id}>
+                      <td>{o.id}</td>
+                      <td>{o.customerName || o.fullName}</td>
+                      <td>{o.status}</td>
+                      <td>{formatPrice(o.totalPrice)} UAH</td>
+                      <td>{o.createdAt}</td>
+                      <td className="text-center">
+                        <div className="d-flex gap-2 justify-content-center">
+                          <button
+                            className="btn btn-success btn-sm"
+                            disabled={o.status === 'CONFIRMED'}
+                            onClick={() => adminConfirm(o.id)}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            disabled={o.status === 'CANCELED'}
+                            onClick={() => adminCancel(o.id)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {adminOrders.length === 0 && (
+                    <tr><td colSpan="6" className="text-center text-muted">No orders yet</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       );
     }
@@ -1190,6 +1310,9 @@ export default function App() {
               {currentUser ? (
                 <>
                   <li className="nav-item"><NavLink to="/orders/my">My Orders</NavLink></li>
+                  {isAdmin && (
+                    <li className="nav-item"><NavLink to="/admin/orders">Manage Orders</NavLink></li>
+                  )}
                   <li className="nav-item d-flex align-items-center">
                     <span className="nav-link user-label">
                       Hello, {currentUser.username}

@@ -38,12 +38,14 @@ services:
       - GATEWAY_UPSTREAM_AUTH=http://auth:3200
       - GATEWAY_UPSTREAM_PRODUCT=http://product:3300
       - GATEWAY_UPSTREAM_ORDER=http://order:3400
+      - GATEWAY_UPSTREAM_ADMIN=http://admin:3500
       - GATEWAY_JWT_SECRET=changemechangemechangemechangeme
     depends_on:
       - db
       - rabbitmq
       - auth
       - order
+      - admin
 
   product:
     build:
@@ -77,6 +79,18 @@ services:
       - db
       - rabbitmq
       - product
+
+  admin:
+    build:
+      context: ./admin
+    container_name: ${APP_NAME}_admin
+    ports:
+      - "3500:3500"
+    environment:
+      - ORDER_SERVICE_URL=http://order:3400
+    depends_on:
+      - db
+      - order
 
   client:
     build:

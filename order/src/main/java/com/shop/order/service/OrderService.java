@@ -97,4 +97,30 @@ public class OrderService {
         }
         return orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
+
+    @Transactional(readOnly = true)
+    public List<Order> getAllOrders() {
+        return orderRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Transactional
+    public Order confirmOrder(String orderId, String comment) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        order.setStatus(OrderStatus.CONFIRMED);
+        order.setCancellationReason(null);
+        if (comment != null && !comment.isBlank()) {
+            order.setNotes(comment.trim());
+        }
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public Order cancelOrder(String orderId, String reason) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        order.setStatus(OrderStatus.CANCELED);
+        order.setCancellationReason(reason == null ? "" : reason.trim());
+        return orderRepository.save(order);
+    }
 }

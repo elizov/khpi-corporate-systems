@@ -38,36 +38,26 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
         String method = exchange.getRequest().getMethod() != null
                 ? exchange.getRequest().getMethod().name()
                 : "";
-        if (isPublic(path, method)) {
-            return chain.filter(exchange);
-        }
+        boolean publicPath = isPublic(path, method);
 
         List<String> authHeaders = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION);
         String authHeader = (authHeaders == null || authHeaders.isEmpty()) ? null : authHeaders.get(0);
+
+        if (publicPath) {
+            // For public routes, try to propagate user headers if token is present, but don't block if absent/invalid.
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                exchange = attachUserHeaders(exchange, authHeader.substring(7));
+            }
+            return chain.filter(exchange);
+        }
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        String token = authHeader.substring(7);
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            Long userId = claims.get("uid", Long.class);
-            String role = claims.get("role", String.class);
-            String username = claims.getSubject();
-
-            exchange = exchange.mutate()
-                    .request(builder -> builder
-                            .header("X-User-Id", userId != null ? userId.toString() : "")
-                            .header("X-User-Role", role != null ? role : "")
-                            .header("X-User-Name", username != null ? username : "")
-                    )
-                    .build();
-        } catch (Exception e) {
+        exchange = attachUserHeaders(exchange, authHeader.substring(7));
+        if (exchange == null) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
@@ -91,6 +81,29 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
             return "GET".equalsIgnoreCase(method);
         }
         return publicPaths.stream().anyMatch(pattern -> matcher.match(pattern, path));
+    }
+
+    private ServerWebExchange attachUserHeaders(ServerWebExchange exchange, String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            Long userId = claims.get("uid", Long.class);
+            String role = claims.get("role", String.class);
+            String username = claims.getSubject();
+
+            return exchange.mutate()
+                    .request(builder -> builder
+                            .header("X-User-Id", userId != null ? userId.toString() : "")
+                            .header("X-User-Role", role != null ? role : "")
+                            .header("X-User-Name", username != null ? username : "")
+                    )
+                    .build();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

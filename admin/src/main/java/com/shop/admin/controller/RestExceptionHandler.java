@@ -35,4 +35,10 @@ public class RestExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(Map.of("error", message));
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGeneric(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Server error", "details", ex.getMessage()));
+    }
 }

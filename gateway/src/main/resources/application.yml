@@ -21,3 +21,4 @@ management:
 # e.g. gateway.upstream.auth=http://auth:8080 or GATEWAY_UPSTREAM_AUTH=http://host.docker.internal:3200
 #      gateway.upstream.product=http://product:3300 or GATEWAY_UPSTREAM_PRODUCT=http://host.docker.internal:3300
 #      gateway.upstream.order=http://order:3400 or GATEWAY_UPSTREAM_ORDER=http://host.docker.internal:3400
+#      gateway.upstream.admin=http://admin:3500 or GATEWAY_UPSTREAM_ADMIN=http://host.docker.internal:3500

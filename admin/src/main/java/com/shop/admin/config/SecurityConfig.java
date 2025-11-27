@@ -1,4 +1,4 @@
-package com.shop.order.config;
+package com.shop.admin.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +26,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/cart/**").permitAll()
-                        .requestMatchers("/api/checkout/**").permitAll()
-                        .requestMatchers("/api/orders/my").authenticated()
-                        .requestMatchers("/api/orders/**").permitAll()
                         .requestMatchers("/api/admin/orders/**").hasRole("ADMIN")
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().permitAll()
