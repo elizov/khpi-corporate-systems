@@ -239,7 +239,18 @@ export default function App() {
     }
   };
 
+  const resetCheckoutState = () => {
+    setCheckoutSubmitError('');
+    setCheckoutErrors({});
+    setCurrentOrder(null);
+    setOrderDetail(null);
+    setCheckoutDraft(null);
+    sessionStorage.removeItem('checkoutDraft');
+    sessionStorage.removeItem('checkoutCart');
+  };
+
   const proceedToCheckout = () => {
+    resetCheckoutState();
     navigate('/checkout');
   };
 
@@ -268,6 +279,7 @@ export default function App() {
 
   const submitCheckout = async (e) => {
     e.preventDefault();
+    resetCheckoutState();
     setCheckoutErrors({});
     setCheckoutSubmitError('');
     // Save draft locally; order will be created on confirmation
