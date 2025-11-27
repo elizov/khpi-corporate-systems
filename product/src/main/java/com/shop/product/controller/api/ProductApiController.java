@@ -136,6 +136,9 @@ public class ProductApiController {
                     if (request.getDescription() != null) {
                         product.setDescription(request.getDescription());
                     }
+                    if (request.getImageUrl() != null) {
+                        product.setImageUrl(request.getImageUrl());
+                    }
                 })
                 .map(ProductResponse::fromEntity)
                 .map(ResponseEntity::ok)
@@ -177,6 +180,9 @@ public class ProductApiController {
         @Size(max = 500)
         private String description;
 
+        @Size(max = 500)
+        private String imageUrl;
+
         public String getName() {
             return name;
         }
@@ -209,12 +215,21 @@ public class ProductApiController {
             this.description = description;
         }
 
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
         private Product toProduct() {
             Product product = new Product();
             product.setName(name);
             product.setCategory(category);
             product.setPrice(price);
             product.setDescription(description);
+            product.setImageUrl(imageUrl);
             return product;
         }
     }
@@ -233,6 +248,9 @@ public class ProductApiController {
         @Size(max = 500)
         private String description;
 
+        @Size(max = 500)
+        private String imageUrl;
+
         public String getName() {
             return name;
         }
@@ -265,8 +283,16 @@ public class ProductApiController {
             this.description = description;
         }
 
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
         public boolean hasUpdates() {
-            return name != null || category != null || price != null || description != null;
+            return name != null || category != null || price != null || description != null || imageUrl != null;
         }
     }
 
@@ -277,13 +303,15 @@ public class ProductApiController {
         private final String category;
         private final BigDecimal price;
         private final String description;
+        private final String imageUrl;
 
-        public ProductResponse(Long id, String name, String category, BigDecimal price, String description) {
+        public ProductResponse(Long id, String name, String category, BigDecimal price, String description, String imageUrl) {
             this.id = id;
             this.name = name;
             this.category = category;
             this.price = price;
             this.description = description;
+            this.imageUrl = imageUrl;
         }
 
         public Long getId() {
@@ -306,6 +334,10 @@ public class ProductApiController {
             return description;
         }
 
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
         static ProductResponse fromEntity(Product product) {
             Objects.requireNonNull(product, "product must not be null");
             return new ProductResponse(
@@ -313,7 +345,8 @@ public class ProductApiController {
                     product.getName(),
                     product.getCategory(),
                     product.getPrice(),
-                    product.getDescription()
+                    product.getDescription(),
+                    product.getImageUrl()
             );
         }
     }

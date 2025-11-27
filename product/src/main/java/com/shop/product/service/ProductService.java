@@ -84,6 +84,7 @@ public class ProductService {
             existing.setCategory(source.getCategory());
             existing.setPrice(source.getPrice());
             existing.setDescription(source.getDescription());
+            existing.setImageUrl(source.getImageUrl());
             return productRepository.save(existing);
         });
     }

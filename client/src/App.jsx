@@ -1129,6 +1129,17 @@ export default function App() {
         <div className="catalog-grid">
           {products.map((product) => (
             <div key={product.id} className="product-card">
+              <div className="product-thumb">
+                <img
+                  src={product.imageUrl || 'https://dummyimage.com/640x400/e5e7eb/9ca3af&text=No+image'}
+                  alt={product.name}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://dummyimage.com/640x400/d1d5db/6b7280&text=Image+unavailable';
+                  }}
+                />
+              </div>
               <h5 className="mb-1">{product.name}</h5>
               <p className="text-muted mb-1">{product.description}</p>
               <p className="text-muted mb-2">{product.category}</p>

@@ -29,15 +29,19 @@ public class Product {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     public Product() {
     }
 
-    public Product(Long id, String name, String category, BigDecimal price, String description) {
+    public Product(Long id, String name, String category, BigDecimal price, String description, String imageUrl) {
         this.id = id;
         this.name = name;
         this.category = category;
         this.price = price;
         this.description = description;
+        this.imageUrl = imageUrl;
     }
 
     public Long getId() {
@@ -78,5 +82,13 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
