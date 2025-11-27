@@ -18,7 +18,7 @@ public class UserService {
     }
 
     @Transactional
-    public void register(User user) {
+    public User register(User user) {
         if (userRepository.findByUsername(user.getUsername()) != null) {
             throw new IllegalArgumentException("User with this username already exists");
         }
@@ -30,7 +30,7 @@ public class UserService {
         }
         user.setRole(user.getRole().toUpperCase(java.util.Locale.ROOT));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Transactional(readOnly = true)

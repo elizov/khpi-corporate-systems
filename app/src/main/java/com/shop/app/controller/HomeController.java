@@ -1,16 +1,17 @@
 package com.shop.app.controller;
 
-import com.shop.app.model.User;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.util.Map;
+
+@RestController
 public class HomeController {
 
     @GetMapping("/")
-    public String home(Model model, HttpSession session) {
-        return "index";
+    public Map<String, String> home() {
+        return Map.of(
+                "message", "React client should be served separately from /client. Backend exposes REST endpoints under /api."
+        );
     }
 }

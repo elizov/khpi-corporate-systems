@@ -1,12 +1,17 @@
 package com.shop.app.controller;
 
+import com.shop.app.model.CartItem;
 import com.shop.app.service.CartService;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.math.BigDecimal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/cart")
 public class CartController {
 
     private final CartService cartService;
@@ -15,12 +20,14 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @GetMapping("/cart")
-    public String cart(Model model, HttpSession session) {
-        model.addAttribute("title", "Cart");
-        model.addAttribute("items", cartService.getItems(session));
-        model.addAttribute("totalQuantity", cartService.getTotalQuantity(session));
-        model.addAttribute("totalPrice", cartService.getTotalPrice(session));
-        return "cart";
+    @GetMapping
+    public CartSummary cart(HttpSession session) {
+        List<CartItem> items = cartService.getItems(session);
+        int totalQuantity = cartService.getTotalQuantity(session);
+        BigDecimal totalPrice = cartService.getTotalPrice(session);
+        return new CartSummary(items, totalQuantity, totalPrice);
+    }
+
+    public record CartSummary(List<CartItem> items, int totalQuantity, BigDecimal totalPrice) {
     }
 }

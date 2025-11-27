@@ -1,5 +1,6 @@
 package com.shop.app.controller;
 
+import com.shop.app.dto.OrderResponse;
 import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
@@ -8,24 +9,26 @@ import com.shop.app.service.CartService;
 import com.shop.app.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.function.Supplier;
-import java.util.function.Consumer;
 
-@Controller
+@RestController
+@RequestMapping("/api/checkout")
 public class CheckoutController {
 
-    private static final String CHECKOUT_FORM_SESSION_KEY = "checkoutForm";
     private static final String PAYMENT_METHOD_CASH = "Cash on Delivery";
     private static final Pattern CARD_NUMBER_PATTERN = Pattern.compile("^[0-9]{12,19}$");
 
@@ -37,45 +40,23 @@ public class CheckoutController {
         this.orderService = orderService;
     }
 
-    @GetMapping("/checkout")
-    public String showCheckoutForm(Model model, HttpSession session) {
-        List<CartItem> items = new ArrayList<>(cartService.getItems(session));
-        if (items.isEmpty()) {
-            return "redirect:/cart";
-        }
-
-        User currentUser = (User) session.getAttribute("user");
-        CheckoutForm checkoutForm = (CheckoutForm) session.getAttribute(CHECKOUT_FORM_SESSION_KEY);
-        if (checkoutForm == null) {
-            checkoutForm = new CheckoutForm();
-        }
-        if (currentUser != null) {
-            maybeSet(checkoutForm::getFullName, checkoutForm::setFullName, currentUser.getUsername());
-            maybeSet(checkoutForm::getEmail, checkoutForm::setEmail, currentUser.getEmail());
-            maybeSet(checkoutForm::getPhone, checkoutForm::setPhone, currentUser.getPhone());
-            maybeSet(checkoutForm::getAddress, checkoutForm::setAddress, currentUser.getAddress());
-            maybeSet(checkoutForm::getCity, checkoutForm::setCity, currentUser.getCity());
-            maybeSet(checkoutForm::getPostalCode, checkoutForm::setPostalCode, currentUser.getPostalCode());
-        }
-
-        populateCartData(model, session, items);
-        populateOptions(model);
-
-        model.addAttribute("checkoutForm", checkoutForm);
-
-        return "checkout";
+    @GetMapping("/options")
+    public Map<String, Object> options() {
+        return Map.of(
+                "paymentMethods", List.of("Credit Card", "PayPal", "Cash on Delivery"),
+                "deliveryMethods", List.of("Courier Delivery", "Pickup Point", "Nova Poshta"),
+                "cashPaymentMethod", PAYMENT_METHOD_CASH
+        );
     }
 
-    @PostMapping("/checkout")
-    public String processCheckout(
-            @Valid @ModelAttribute("checkoutForm") CheckoutForm checkoutForm,
-            BindingResult bindingResult,
-            Model model,
-            HttpSession session
-    ) {
+    @PostMapping
+    public ResponseEntity<?> finalizeCheckout(@Valid @RequestBody CheckoutForm checkoutForm,
+                                              BindingResult bindingResult,
+                                              HttpSession session) {
         List<CartItem> items = new ArrayList<>(cartService.getItems(session));
         if (items.isEmpty()) {
-            return "redirect:/cart";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Cart is empty"));
         }
 
         checkoutForm.setPaymentMethod(trimToNull(checkoutForm.getPaymentMethod()));
@@ -93,49 +74,11 @@ public class CheckoutController {
         }
 
         if (bindingResult.hasErrors()) {
-            populateCartData(model, session, items);
-            populateOptions(model);
-            return "checkout";
-        }
-
-        session.setAttribute(CHECKOUT_FORM_SESSION_KEY, checkoutForm);
-        return "redirect:/checkout/confirm";
-    }
-
-    @GetMapping("/checkout/confirm")
-    public String confirmCheckout(Model model, HttpSession session) {
-        List<CartItem> items = new ArrayList<>(cartService.getItems(session));
-        if (items.isEmpty()) {
-            return "redirect:/cart";
-        }
-
-        CheckoutForm checkoutForm = (CheckoutForm) session.getAttribute(CHECKOUT_FORM_SESSION_KEY);
-        if (checkoutForm == null) {
-            return "redirect:/checkout";
-        }
-
-        populateCartData(model, session, items);
-        model.addAttribute("checkoutForm", checkoutForm);
-        model.addAttribute("cashPaymentMethod", PAYMENT_METHOD_CASH);
-        boolean cardRequired = requiresCard(checkoutForm.getPaymentMethod());
-        model.addAttribute("cardRequired", cardRequired);
-        if (cardRequired) {
-            model.addAttribute("maskedCardNumber", maskCardNumber(checkoutForm.getCardNumber()));
-        }
-
-        return "checkout-confirm";
-    }
-
-    @PostMapping("/checkout/confirm")
-    public String finalizeCheckout(HttpSession session) {
-        CheckoutForm checkoutForm = (CheckoutForm) session.getAttribute(CHECKOUT_FORM_SESSION_KEY);
-        if (checkoutForm == null) {
-            return "redirect:/checkout";
-        }
-
-        List<CartItem> items = new ArrayList<>(cartService.getItems(session));
-        if (items.isEmpty()) {
-            return "redirect:/cart";
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message", "Validation failed",
+                            "errors", collectErrors(bindingResult)
+                    ));
         }
 
         int totalQuantity = cartService.getTotalQuantity(session);
@@ -144,33 +87,9 @@ public class CheckoutController {
         User currentUser = (User) session.getAttribute("user");
         Order order = orderService.createOrder(checkoutForm, items, totalQuantity, totalPrice, currentUser);
         cartService.clearCart(session);
-        session.removeAttribute(CHECKOUT_FORM_SESSION_KEY);
 
-        return "redirect:/order/" + order.getId();
-    }
-
-    private void populateCartData(Model model, HttpSession session, List<CartItem> items) {
-        model.addAttribute("items", items);
-        model.addAttribute("totalQuantity", cartService.getTotalQuantity(session));
-        model.addAttribute("totalPrice", cartService.getTotalPrice(session));
-    }
-
-    private void populateOptions(Model model) {
-        model.addAttribute("paymentMethods", List.of("Credit Card", "PayPal", "Cash on Delivery"));
-        model.addAttribute("deliveryMethods", List.of("Courier Delivery", "Pickup Point", "Nova Poshta"));
-        model.addAttribute("cashPaymentMethod", PAYMENT_METHOD_CASH);
-    }
-
-    private String maskCardNumber(String cardNumber) {
-        if (cardNumber == null || cardNumber.isBlank()) {
-            return "N/A";
-        }
-        String value = cardNumber.replaceAll("\\s+", "");
-        if (value.length() < 4) {
-            return "****";
-        }
-        String lastFour = value.substring(value.length() - 4);
-        return "**** **** **** " + lastFour;
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(OrderResponse.from(order));
     }
 
     private boolean requiresCard(String paymentMethod) {
@@ -193,9 +112,9 @@ public class CheckoutController {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private void maybeSet(Supplier<String> getter, Consumer<String> setter, String value) {
-        if (getter.get() == null && value != null && !value.isBlank()) {
-            setter.accept(value);
-        }
+    private Map<String, String> collectErrors(BindingResult bindingResult) {
+        Map<String, String> errors = new HashMap<>();
+        bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        return errors;
     }
 }

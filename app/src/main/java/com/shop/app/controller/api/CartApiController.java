@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +24,11 @@ public class CartApiController {
     public CartApiController(ProductService productService, CartService cartService) {
         this.productService = productService;
         this.cartService = cartService;
+    }
+
+    @GetMapping
+    public ResponseEntity<CartSummaryResponse> getCart(HttpSession session) {
+        return ResponseEntity.ok(buildCartSummary(session));
     }
 
     @PostMapping("/items")
@@ -70,6 +76,21 @@ public class CartApiController {
         return buildCartActionResponse(productId, null, session, "Product removed from cart", true);
     }
 
+    private CartSummaryResponse buildCartSummary(HttpSession session) {
+        List<CartLineResponse> lines = cartService.getItems(session).stream()
+                .map(item -> new CartLineResponse(
+                        item.getProductId(),
+                        item.getName(),
+                        item.getPrice(),
+                        item.getQuantity(),
+                        item.getSubtotal()
+                ))
+                .toList();
+        int totalQuantity = cartService.getTotalQuantity(session);
+        BigDecimal totalPrice = cartService.getTotalPrice(session);
+        return new CartSummaryResponse(lines, totalQuantity, totalPrice);
+    }
+
     private ResponseEntity<CartActionResponse> buildCartActionResponse(Long productId,
                                                                        CartItem item,
                                                                        HttpSession session,
@@ -90,6 +111,66 @@ public class CartApiController {
                 message
         );
         return ResponseEntity.ok(response);
+    }
+
+    public static class CartSummaryResponse {
+        private final List<CartLineResponse> items;
+        private final int totalQuantity;
+        private final BigDecimal totalPrice;
+
+        public CartSummaryResponse(List<CartLineResponse> items, int totalQuantity, BigDecimal totalPrice) {
+            this.items = items;
+            this.totalQuantity = totalQuantity;
+            this.totalPrice = totalPrice;
+        }
+
+        public List<CartLineResponse> getItems() {
+            return items;
+        }
+
+        public int getTotalQuantity() {
+            return totalQuantity;
+        }
+
+        public BigDecimal getTotalPrice() {
+            return totalPrice;
+        }
+    }
+
+    public static class CartLineResponse {
+        private final Long productId;
+        private final String name;
+        private final BigDecimal price;
+        private final int quantity;
+        private final BigDecimal subtotal;
+
+        public CartLineResponse(Long productId, String name, BigDecimal price, int quantity, BigDecimal subtotal) {
+            this.productId = productId;
+            this.name = name;
+            this.price = price;
+            this.quantity = quantity;
+            this.subtotal = subtotal;
+        }
+
+        public Long getProductId() {
+            return productId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public BigDecimal getSubtotal() {
+            return subtotal;
+        }
     }
 
     public static class AddToCartRequest {

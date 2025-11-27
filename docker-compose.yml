@@ -28,7 +28,25 @@ services:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: pass
 
+  client:
+    build:
+      context: ./client
+    container_name: ${APP_NAME}_client
+    ports:
+      - "80:80"
+    volumes:
+      - ./client:/app
+      - client-node-modules:/app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 80
+    environment:
+      - API_TARGET=http://localhost:3000
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - db
+      - rabbitmq
+
 volumes:
   db-data:
     name: ${APP_NAME}-db-data
     external: false
+  client-node-modules:
