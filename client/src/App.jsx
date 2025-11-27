@@ -76,6 +76,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
   const [authToken, setAuthToken] = useState(null);
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.roles?.includes('ADMIN');
 
   useEffect(() => {
     loadProducts();
@@ -106,10 +107,14 @@ export default function App() {
       }
     }
     if (route.startsWith('/orders/my')) {
-      loadMyOrders();
+      if (authToken) {
+        loadMyOrders();
+      }
     }
     if (route.startsWith('/admin/orders')) {
-      loadAdminOrders();
+      if (isAdmin && authToken) {
+        loadAdminOrders();
+      }
     }
     if (route.startsWith('/checkout/confirm')) {
       if (!checkoutDraft) {
@@ -135,7 +140,7 @@ export default function App() {
     } else {
       loadCart();
     }
-  }, [route]);
+  }, [route, authToken, isAdmin]);
 
   useEffect(() => {
     const handler = () => setRoute(window.location.pathname || '/');
@@ -158,8 +163,6 @@ export default function App() {
   const authHeaders = () => {
     return authToken ? { Authorization: `Bearer ${authToken}` } : {};
   };
-
-  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.roles?.includes('ADMIN');
 
   const loadProducts = async () => {
     setLoading((prev) => ({ ...prev, products: true }));
