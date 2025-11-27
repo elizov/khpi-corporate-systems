@@ -8,9 +8,10 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.reactive.CorsWebFilter;
 
+import java.util.Arrays;
 import java.util.List;
 
 @SpringBootApplication
@@ -22,8 +23,12 @@ public class GatewayApplication {
 
     @Bean
     public RouteLocator routes(RouteLocatorBuilder builder,
-                               @Value("${gateway.upstream.app:http://app:3199}") String upstream) {
+                               @Value("${gateway.upstream.app:http://app:3199}") String appUpstream,
+                               @Value("${gateway.upstream.auth:http://auth:3200}") String authUpstream) {
         return builder.routes()
+                .route("auth-api", r -> r.path("/api/auth/**")
+                        .filters(f -> f.stripPrefix(1)) // drop /api before forwarding to auth service
+                        .uri(authUpstream))
                 .route("app-api", r -> r.path(
                                 "/api/**",
                                 "/products/**",
@@ -33,15 +38,19 @@ public class GatewayApplication {
                                 "/login",
                                 "/register",
                                 "/logout"
-                        )
-                        .uri(upstream))
+                        ).uri(appUpstream))
                 .build();
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(@Value("${gateway.cors.allowed-origins:*}") String allowedOrigins) {
+    public CorsWebFilter corsWebFilter(@Value("${gateway.cors.allowed-origins:*}") String allowedOrigins) {
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
@@ -55,6 +64,6 @@ public class GatewayApplication {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return new CorsWebFilter(source);
     }
 }

@@ -136,8 +136,6 @@ public class OrderResponse {
         List<OrderItemResponse> mappedItems = order.getItems().stream()
                 .map(OrderItemResponse::from)
                 .toList();
-        Long userId = order.getUser() != null ? order.getUser().getId() : null;
-
         return new OrderResponse(
                 order.getId(),
                 order.getCreatedAt(),
@@ -154,7 +152,7 @@ public class OrderResponse {
                 order.getStatus() != null ? order.getStatus().name() : null,
                 order.getTotalQuantity(),
                 order.getTotalPrice(),
-                userId,
+                order.getUserId(),
                 mappedItems
         );
     }

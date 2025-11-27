@@ -6,7 +6,6 @@ import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
 import com.shop.app.model.OrderItem;
 import com.shop.app.model.OrderStatus;
-import com.shop.app.model.User;
 import com.shop.app.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +34,7 @@ public class OrderService {
                              List<CartItem> items,
                              int totalQuantity,
                              BigDecimal totalPrice,
-                             User user) {
+                             Long userId) {
         Order order = new Order();
         order.setId(UUID.randomUUID().toString());
         order.setCreatedAt(LocalDateTime.now());
@@ -51,7 +50,7 @@ public class OrderService {
         order.setStatus(OrderStatus.NEW);
         order.setTotalQuantity(totalQuantity);
         order.setTotalPrice(totalPrice == null ? BigDecimal.ZERO : totalPrice.setScale(2, RoundingMode.HALF_UP));
-        order.setUser(user);
+        order.setUserId(userId);
 
         String cardNumber = checkoutForm.getCardNumber();
         if (cardNumber != null && cardNumber.length() >= 4) {

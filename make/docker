@@ -22,7 +22,10 @@ $(COMMAND_DOCKER_DOWN):
 
 ## rs: Restart containers
 .PHONY: $(COMMAND_DOCKER_RESTART)
-$(COMMAND_DOCKER_RESTART): $(COMMAND_DOCKER_DOWN) $(COMMAND_DOCKER_UP)
+$(COMMAND_DOCKER_RESTART):
+	$(MAKE) $(COMMAND_DOCKER_DOWN)
+	-docker volume rm $(APP_NAME)-db-data
+	$(MAKE) $(COMMAND_DOCKER_UP)
 
 
 ## ps: Show containers status

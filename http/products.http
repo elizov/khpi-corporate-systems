@@ -5,9 +5,9 @@
 # @username = user
 @password = pass
 
-### 0. Obtain admin token
+### 0. Obtain admin token (JWT)
 # @name auth
-POST {{baseUrl}}/api/auth/token
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 Accept: application/json
 
@@ -28,7 +28,7 @@ Accept: application/json
 POST {{baseUrl}}/api/products
 Content-Type: application/json
 Accept: application/json
-Authorization: {{adminToken}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "REST Client Demo Product",

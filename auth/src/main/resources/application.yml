@@ -1,0 +1,32 @@
+server:
+  port: 3200
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:mysql://db:3306/auth?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: root
+    password: toor
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  sql:
+    init:
+      mode: always
+  # ensure data.sql runs after JPA ddl
+  jpa.defer-datasource-initialization: true
+
+jwt:
+  secret: changemechangemechangemechangeme
+  expiration-ms: 3600000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

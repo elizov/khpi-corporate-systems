@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 3100
 
 spring:
   application:
@@ -19,3 +19,4 @@ management:
 
 # Upstream targets; override via env variables when running in Docker/compose
 # e.g. gateway.upstream.app=http://app:3199 or GATEWAY_UPSTREAM_APP=http://host.docker.internal:3199
+#      gateway.upstream.auth=http://auth:8080 or GATEWAY_UPSTREAM_AUTH=http://host.docker.internal:3200

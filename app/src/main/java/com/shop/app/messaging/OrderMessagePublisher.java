@@ -45,8 +45,8 @@ public class OrderMessagePublisher {
     }
 
     private OrderCreatedMessage toPayload(Order order) {
-        String username = Optional.ofNullable(order.getUser())
-                .map(user -> user.getUsername() != null ? user.getUsername() : user.getEmail())
+        String username = Optional.ofNullable(order.getUserId())
+                .map(id -> "user-" + id)
                 .orElse(order.getFullName());
 
         List<OrderItem> sourceItems = order.getItems() == null ? List.of() : order.getItems();

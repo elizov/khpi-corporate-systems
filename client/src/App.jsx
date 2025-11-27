@@ -3,6 +3,13 @@ import React, { useEffect, useState } from 'react';
 const apiTarget = (import.meta.env.API_TARGET || 'http://localhost:3100').replace(/\/$/, '');
 const API_BASE = apiTarget.endsWith('/api') ? apiTarget : `${apiTarget}/api`;
 
+const fetchApi = (url, options = {}) =>
+  fetch(url, {
+    credentials: 'include', // keep session cookies for cart/checkout
+    ...options,
+    headers: { ...(options.headers || {}) },
+  });
+
 export default function App() {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState({ items: [], totalQuantity: 0, totalPrice: 0 });
@@ -65,20 +72,25 @@ export default function App() {
   const [ordersError, setOrdersError] = useState('');
   const [toast, setToast] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
     loadProducts();
     loadCheckoutOptions();
     loadCart();
     const storedUser = sessionStorage.getItem('currentUser');
+    const storedToken = sessionStorage.getItem('authToken');
+    if (storedToken) {
+      setAuthToken(storedToken);
+    }
     if (storedUser) {
       try {
         setCurrentUser(JSON.parse(storedUser));
       } catch {
-        loadCurrentUser();
+        loadCurrentUser(storedToken);
       }
-    } else {
-      loadCurrentUser();
+    } else if (storedToken) {
+      loadCurrentUser(storedToken);
     }
   }, []);
 
@@ -137,10 +149,14 @@ export default function App() {
     return qs ? `?${qs}` : '';
   };
 
+  const authHeaders = () => {
+    return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+  };
+
   const loadProducts = async () => {
     setLoading((prev) => ({ ...prev, products: true }));
     try {
-      const response = await fetch(`${API_BASE}/products${buildQuery()}`, { credentials: 'include' });
+      const response = await fetchApi(`${API_BASE}/products${buildQuery()}`);
       if (!response.ok) throw new Error('Failed to load products');
       setProducts(await response.json());
     } catch (error) {
@@ -153,7 +169,7 @@ export default function App() {
   const loadCart = async () => {
     setLoading((prev) => ({ ...prev, cart: true }));
     try {
-      const response = await fetch(`${API_BASE}/cart`, { credentials: 'include' });
+      const response = await fetchApi(`${API_BASE}/cart`, { headers: authHeaders() });
       if (!response.ok) throw new Error('Failed to load cart');
       setCart(await response.json());
     } catch (error) {
@@ -165,11 +181,10 @@ export default function App() {
 
   const addToCart = async (productId) => {
     try {
-      const response = await fetch(`${API_BASE}/cart/items`, {
+      const response = await fetchApi(`${API_BASE}/cart/items`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ productId }),
-        credentials: 'include',
       });
       if (!response.ok) throw new Error('Cannot add product to cart');
       const data = await response.json();
@@ -188,10 +203,9 @@ export default function App() {
       return;
     }
     try {
-      const response = await fetch(`${API_BASE}/cart/items/${productId}`, {
+      const response = await fetchApi(`${API_BASE}/cart/items/${productId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ quantity }),
       });
       if (!response.ok) throw new Error('Failed to update quantity');
@@ -203,9 +217,9 @@ export default function App() {
 
   const removeCartItem = async (productId) => {
     try {
-      const response = await fetch(`${API_BASE}/cart/items/${productId}`, {
+      const response = await fetchApi(`${API_BASE}/cart/items/${productId}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: authHeaders(),
       });
       if (!response.ok) throw new Error('Failed to remove item');
       await loadCart();
@@ -220,7 +234,7 @@ export default function App() {
 
   const loadCheckoutOptions = async () => {
     try {
-      const response = await fetch(`${API_BASE}/checkout/options`, { credentials: 'include' });
+      const response = await fetchApi(`${API_BASE}/checkout/options`, { headers: authHeaders() });
       if (!response.ok) return;
       const data = await response.json();
       setCheckoutOptions({
@@ -271,10 +285,9 @@ export default function App() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/checkout`, {
+      const response = await fetchApi(`${API_BASE}/checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(draft),
       });
       if (!response.ok) {
@@ -302,7 +315,7 @@ export default function App() {
     setOrderLoading(true);
     setOrderError('');
     try {
-      const response = await fetch(`${API_BASE}/orders/${orderId}`, { credentials: 'include' });
+      const response = await fetchApi(`${API_BASE}/orders/${orderId}`, { headers: authHeaders() });
       if (!response.ok) {
         throw new Error('Order not found');
       }
@@ -319,7 +332,7 @@ export default function App() {
     setOrdersLoading(true);
     setOrdersError('');
     try {
-      const response = await fetch(`${API_BASE}/orders/my`, { credentials: 'include' });
+      const response = await fetchApi(`${API_BASE}/orders/my`, { headers: authHeaders() });
       if (!response.ok) {
         throw new Error('Failed to load orders');
       }
@@ -360,10 +373,9 @@ export default function App() {
       postalCode: registerForm.postalCode?.trim(),
     };
     try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetchApi(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(sanitized),
       });
       if (!response.ok) {
@@ -404,10 +416,9 @@ export default function App() {
     setLoginSubmitting(true);
     setLoginError('');
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetchApi(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(loginForm),
       });
       if (!response.ok) {
@@ -415,8 +426,13 @@ export default function App() {
         throw new Error(text || 'Invalid username or password');
       }
       const user = await response.json();
-      setCurrentUser(user);
-      sessionStorage.setItem('currentUser', JSON.stringify(user));
+      const userPayload = user.user != null ? user.user : user;
+      if (user.token) {
+        setAuthToken(user.token);
+        sessionStorage.setItem('authToken', user.token);
+      }
+      setCurrentUser(userPayload);
+      sessionStorage.setItem('currentUser', JSON.stringify(userPayload));
       await loadCart();
       setLoginForm(initialLoginForm);
       navigate('/');
@@ -427,13 +443,17 @@ export default function App() {
     }
   };
 
-  const loadCurrentUser = async () => {
+  const loadCurrentUser = async (tokenOverride) => {
     try {
-      const response = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+      const token = tokenOverride || authToken;
+      if (!token) return;
+      const response = await fetchApi(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) return;
       const user = await response.json();
       setCurrentUser(user);
       sessionStorage.setItem('currentUser', JSON.stringify(user));
+      sessionStorage.setItem('authToken', token);
+      setAuthToken(token);
     } catch {
       // ignore
     }
@@ -441,12 +461,14 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' });
+      await fetchApi(`${API_BASE}/auth/logout`, { method: 'POST', headers: authHeaders() });
     } catch {
       // ignore
     }
     setCurrentUser(null);
     sessionStorage.removeItem('currentUser');
+    setAuthToken(null);
+    sessionStorage.removeItem('authToken');
     navigate('/');
     setNavOpen(false);
   };
@@ -466,8 +488,8 @@ export default function App() {
     }
 
     const password = form.password || '';
-    if (password.length < 6 || password.length > 64) {
-      errors.password = 'Password must be between 6 and 64 characters';
+    if (password.length < 4 || password.length > 64) {
+      errors.password = 'Password must be between 4 and 64 characters';
     }
 
     const ageNum = Number(form.age);

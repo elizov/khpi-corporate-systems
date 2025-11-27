@@ -36,8 +36,7 @@ CREATE TABLE IF NOT EXISTS orders (
     cancellation_reason VARCHAR(500),
     user_id BIGINT,
     total_quantity INT NOT NULL,
-    total_price DECIMAL(12, 2) NOT NULL,
-    CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    total_price DECIMAL(12, 2) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS order_items (

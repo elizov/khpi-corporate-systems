@@ -4,10 +4,10 @@ import com.shop.app.dto.OrderResponse;
 import com.shop.app.model.CartItem;
 import com.shop.app.model.CheckoutForm;
 import com.shop.app.model.Order;
-import com.shop.app.model.User;
 import com.shop.app.service.CartService;
 import com.shop.app.service.OrderService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +52,8 @@ public class CheckoutController {
     @PostMapping
     public ResponseEntity<?> finalizeCheckout(@Valid @RequestBody CheckoutForm checkoutForm,
                                               BindingResult bindingResult,
-                                              HttpSession session) {
+                                              HttpSession session,
+                                              HttpServletRequest request) {
         List<CartItem> items = new ArrayList<>(cartService.getItems(session));
         if (items.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -84,8 +85,8 @@ public class CheckoutController {
         int totalQuantity = cartService.getTotalQuantity(session);
         BigDecimal totalPrice = cartService.getTotalPrice(session);
 
-        User currentUser = (User) session.getAttribute("user");
-        Order order = orderService.createOrder(checkoutForm, items, totalQuantity, totalPrice, currentUser);
+        Long currentUserId = resolveUserId(session, request);
+        Order order = orderService.createOrder(checkoutForm, items, totalQuantity, totalPrice, currentUserId);
         cartService.clearCart(session);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -116,5 +117,23 @@ public class CheckoutController {
         Map<String, String> errors = new HashMap<>();
         bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         return errors;
+    }
+
+    private Long resolveUserId(HttpSession session, HttpServletRequest request) {
+        Object cached = session.getAttribute("userId");
+        if (cached instanceof Long) {
+            return (Long) cached;
+        }
+        String userIdHeader = request.getHeader("X-User-Id");
+        if (userIdHeader == null || userIdHeader.isBlank()) {
+            return null;
+        }
+        try {
+            Long userId = Long.parseLong(userIdHeader);
+            session.setAttribute("userId", userId);
+            return userId;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

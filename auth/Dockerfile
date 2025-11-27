@@ -8,6 +8,6 @@ RUN mvn -DskipTests package
 # Runtime stage
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /workspace/target/gateway-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 3100
+COPY --from=build /workspace/target/auth-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 3200
 ENTRYPOINT ["java","-jar","/app/app.jar"]

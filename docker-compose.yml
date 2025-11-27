@@ -33,13 +33,16 @@ services:
       context: ./gateway
     container_name: ${APP_NAME}_gateway
     ports:
-      - "3100:8080"
+      - "3100:3100"
     environment:
       - GATEWAY_UPSTREAM_APP=http://app:3199
+      - GATEWAY_UPSTREAM_AUTH=http://auth:3200
+      - GATEWAY_JWT_SECRET=changemechangemechangemechangeme
     depends_on:
       - db
       - rabbitmq
       - app
+      - auth
 
   client:
     build:
@@ -75,6 +78,20 @@ services:
     depends_on:
       - db
       - rabbitmq
+
+  auth:
+    build:
+      context: ./auth
+    container_name: ${APP_NAME}_auth
+    ports:
+      - "3200:3200"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/auth?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=toor
+      - JWT_SECRET=changemechangemechangemechangeme
+    depends_on:
+      - db
 
 volumes:
   db-data:
