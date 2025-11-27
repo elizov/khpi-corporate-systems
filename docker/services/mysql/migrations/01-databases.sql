@@ -1,7 +1,9 @@
 CREATE DATABASE IF NOT EXISTS app;
 CREATE DATABASE IF NOT EXISTS auth;
+CREATE DATABASE IF NOT EXISTS product;
 
 CREATE USER 'user'@'%' IDENTIFIED WITH mysql_native_password BY 'pass';
 
 GRANT ALL PRIVILEGES ON app.* TO 'user'@'%';
 GRANT ALL PRIVILEGES ON auth.* TO 'user'@'%';
+GRANT ALL PRIVILEGES ON product.* TO 'user'@'%';

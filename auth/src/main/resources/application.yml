@@ -6,8 +6,8 @@ spring:
     name: auth-service
   datasource:
     url: jdbc:mysql://db:3306/auth?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
-    username: root
-    password: toor
+    username: user
+    password: pass
   jpa:
     hibernate:
       ddl-auto: create-drop
