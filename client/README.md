@@ -10,6 +10,6 @@ npm install
 npm run dev
 ```
 
-- Dev server proxies `/api` to `http://localhost:3000` by default via `API_TARGET` (see `vite.config.js`).
+- Dev server proxies `/api` to `http://localhost:3100` by default via `API_TARGET` (see `vite.config.js`).
 - Minimal UI pulls the catalog from `/api/products` and drives the session cart via `/api/cart`.
 - Original Thymeleaf pages are stored under `legacy-templates/` as a reference while you port features to React.

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const apiTarget = (import.meta.env.API_TARGET || 'http://localhost:3000').replace(/\/$/, '');
+const apiTarget = (import.meta.env.API_TARGET || 'http://localhost:3100').replace(/\/$/, '');
 const API_BASE = apiTarget.endsWith('/api') ? apiTarget : `${apiTarget}/api`;
 
 export default function App() {

@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - PreserveHostHeader
+      httpclient:
+        wiretap: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+# Upstream targets; override via env variables when running in Docker/compose
+# e.g. gateway.upstream.app=http://app:3199 or GATEWAY_UPSTREAM_APP=http://host.docker.internal:3199

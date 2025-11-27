@@ -40,7 +40,7 @@ weba:
 ## swagger: Open the swagger docs
 .PHONY: swagger
 swagger:
-	open http://localhost:3000/swagger-ui/index.html
+	open http://localhost:3199/swagger-ui/index.html
 
 
 ## swaggerp: Open the swagger docs
@@ -53,3 +53,10 @@ swaggerp:
 .PHONY: rabbit
 rabbit:
 	open http://localhost:15672/
+
+
+## client: Run the client app
+.PHONY: client
+client:
+	open http://localhost:3000/
+
