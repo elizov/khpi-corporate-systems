@@ -35,16 +35,15 @@ services:
     ports:
       - "3100:3100"
     environment:
-      - GATEWAY_UPSTREAM_APP=http://app:3199
       - GATEWAY_UPSTREAM_AUTH=http://auth:3200
       - GATEWAY_UPSTREAM_PRODUCT=http://product:3300
+      - GATEWAY_UPSTREAM_ORDER=http://order:3400
       - GATEWAY_JWT_SECRET=changemechangemechangemechangeme
     depends_on:
       - db
       - rabbitmq
-      - app
       - auth
-      - product
+      - order
 
   product:
     build:
@@ -58,6 +57,26 @@ services:
       - SPRING_DATASOURCE_PASSWORD=pass
     depends_on:
       - db
+
+  order:
+    build:
+      context: ./order
+    container_name: ${APP_NAME}_order
+    ports:
+      - "3400:3400"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/order?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=pass
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=user
+      - SPRING_RABBITMQ_PASSWORD=pass
+      - PRODUCT_SERVICE_URL=http://product:3300
+      - ORDER_QUEUE_NAME=orders.new
+    depends_on:
+      - db
+      - rabbitmq
+      - product
 
   client:
     build:
@@ -76,25 +95,6 @@ services:
       - db
       - rabbitmq
       - gateway
-
-  app:
-    build:
-      context: ./app
-    container_name: ${APP_NAME}_app
-    ports:
-      - "3199:3199"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/app?useSSL=false&serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=user
-      - SPRING_DATASOURCE_PASSWORD=pass
-      - PRODUCT_SERVICE_URL=http://product:3300
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_USERNAME=user
-      - SPRING_RABBITMQ_PASSWORD=pass
-    depends_on:
-      - db
-      - rabbitmq
-      - product
 
   auth:
     build:

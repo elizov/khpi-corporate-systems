@@ -23,16 +23,16 @@ public class GatewayApplication {
 
     @Bean
     public RouteLocator routes(RouteLocatorBuilder builder,
-                               @Value("${gateway.upstream.app:http://app:3199}") String appUpstream,
                                @Value("${gateway.upstream.auth:http://auth:3200}") String authUpstream,
-                               @Value("${gateway.upstream.product:http://product:3300}") String productUpstream) {
+                               @Value("${gateway.upstream.product:http://product:3300}") String productUpstream,
+                               @Value("${gateway.upstream.order:http://order:3400}") String orderUpstream) {
         return builder.routes()
                 .route("auth-api", r -> r.path("/api/auth/**")
                         .filters(f -> f.stripPrefix(1)) // drop /api before forwarding to auth service
                         .uri(authUpstream))
                 .route("product-api", r -> r.path("/api/products/**", "/products/**")
                         .uri(productUpstream))
-                .route("app-api", r -> r.path(
+                .route("order-api", r -> r.path(
                                 "/api/cart/**",
                                 "/api/checkout/**",
                                 "/api/orders/**",
@@ -42,7 +42,7 @@ public class GatewayApplication {
                                 "/login",
                                 "/register",
                                 "/logout"
-                        ).uri(appUpstream))
+                        ).uri(orderUpstream))
                 .build();
     }
 
