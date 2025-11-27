@@ -1,7 +1,7 @@
 package com.shop.app.service;
 
+import com.shop.app.client.dto.ProductDto;
 import com.shop.app.model.CartItem;
-import com.shop.app.model.Product;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +30,7 @@ public class CartService {
         return cart;
     }
 
-    public CartItem addProduct(Product product, HttpSession session) {
+    public CartItem addProduct(ProductDto product, HttpSession session) {
         Map<Long, CartItem> cart = getCart(session);
         CartItem cartItem = cart.get(product.getId());
         if (cartItem == null) {

@@ -1,33 +1,18 @@
-package com.shop.app.model;
-
-import jakarta.persistence.*;
+package com.shop.app.client.dto;
 
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "products")
-public class Product {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductDto {
     private Long id;
-
-    @Column(nullable = false, length = 255)
     private String name;
-
-    @Column(nullable = false, length = 100)
     private String category;
-
-    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
-
-    @Column(length = 500)
     private String description;
 
-    public Product() {
+    public ProductDto() {
     }
 
-    public Product(Long id, String name, String category, BigDecimal price, String description) {
+    public ProductDto(Long id, String name, String category, BigDecimal price, String description) {
         this.id = id;
         this.name = name;
         this.category = category;

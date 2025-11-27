@@ -1,0 +1,24 @@
+server:
+  port: 3300
+
+spring:
+  application:
+    name: product-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/product?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: user
+    password: pass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  sql:
+    init:
+      mode: always
+  jpa.defer-datasource-initialization: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

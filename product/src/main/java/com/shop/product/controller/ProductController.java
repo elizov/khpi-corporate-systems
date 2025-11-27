@@ -1,7 +1,7 @@
-package com.shop.app.controller;
+package com.shop.product.controller;
 
-import com.shop.app.model.Product;
-import com.shop.app.service.ProductService;
+import com.shop.product.model.Product;
+import com.shop.product.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

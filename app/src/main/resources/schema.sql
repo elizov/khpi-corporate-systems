@@ -1,11 +1,3 @@
-CREATE TABLE IF NOT EXISTS products (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    price DECIMAL(12, 2) NOT NULL,
-    description VARCHAR(500)
-);
-
 CREATE TABLE IF NOT EXISTS orders (
     id VARCHAR(36) PRIMARY KEY,
     created_at DATETIME NOT NULL,

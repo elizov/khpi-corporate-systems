@@ -1,7 +1,7 @@
-package com.shop.app.service;
+package com.shop.product.service;
 
-import com.shop.app.model.Product;
-import com.shop.app.repository.ProductRepository;
+import com.shop.product.model.Product;
+import com.shop.product.repository.ProductRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;

@@ -1,28 +1,34 @@
 package com.shop.app.controller.api;
 
+import com.shop.app.client.ProductClient;
+import com.shop.app.client.dto.ProductDto;
 import com.shop.app.model.CartItem;
-import com.shop.app.model.Product;
 import com.shop.app.service.CartService;
-import com.shop.app.service.ProductService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cart")
 public class CartApiController {
 
-    private final ProductService productService;
+    private final ProductClient productClient;
     private final CartService cartService;
 
-    public CartApiController(ProductService productService, CartService cartService) {
-        this.productService = productService;
+    public CartApiController(ProductClient productClient, CartService cartService) {
+        this.productClient = productClient;
         this.cartService = cartService;
     }
 
@@ -37,12 +43,17 @@ public class CartApiController {
             return ResponseEntity.badRequest().body(Map.of("message", "Product id is required"));
         }
 
-        Optional<Product> productOptional = productService.getProductById(request.getProductId());
-        if (productOptional.isEmpty()) {
+        ProductClient.ProductLookupResult lookup = productClient.getProductById(request.getProductId());
+        if (lookup.isError()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("message", "Product service is unavailable, please try again later"));
+        }
+        if (lookup.isNotFound() || lookup.getProduct() == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Product not found"));
         }
 
-        CartItem item = cartService.addProduct(productOptional.get(), session);
+        ProductDto product = lookup.getProduct();
+        CartItem item = cartService.addProduct(product, session);
         return buildCartActionResponse(item.getProductId(), item, session, "Product added to cart", false);
     }
 
