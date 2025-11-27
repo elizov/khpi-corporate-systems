@@ -43,13 +43,13 @@ Authorization: Bearer {{adminToken}}
 ### 3. Get the created product
 GET {{baseUrl}}/api/products/{{productId}}
 Accept: application/json
-Authorization: {{adminToken}}
+Authorization: Bearer {{adminToken}}
 
 ### 4. Replace the created product
 PUT {{baseUrl}}/api/products/{{productId}}
 Content-Type: application/json
 Accept: application/json
-Authorization: {{adminToken}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "REST Client Demo Product (Updated)",
@@ -62,7 +62,7 @@ Authorization: {{adminToken}}
 PATCH {{baseUrl}}/api/products/{{productId}}
 Content-Type: application/json
 Accept: application/json
-Authorization: {{adminToken}}
+Authorization: Bearer {{adminToken}}
 
 {
   "price": 149.99,
@@ -72,4 +72,4 @@ Authorization: {{adminToken}}
 ### 6. Delete the created product
 DELETE {{baseUrl}}/api/products/{{productId}}
 Accept: application/json
-Authorization: {{adminToken}}
+Authorization: Bearer {{adminToken}}
