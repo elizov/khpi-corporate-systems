@@ -1284,10 +1284,10 @@ export default function App() {
               </button>
             </div>
           ))}
-          {products.length === 0 && !loading.products && (
-            <div className="alert alert-secondary">No products yet. Seed data first.</div>
-          )}
         </div>
+          {products.length === 0 && !loading.products && (
+            <div className="alert alert-secondary" style={{width: '100%'}}>No products yet. Seed data first.</div>
+          )}
       </>
     );
   };
